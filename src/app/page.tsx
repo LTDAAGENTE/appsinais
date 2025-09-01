@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Flame, Loader, XCircle } from 'lucide-react';
+import { Flame, Loader, Timer, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 
@@ -25,6 +25,7 @@ const LOADING_MESSAGES = [
     "Finalizando análise técnica...",
     "Localizando próximo sinal...",
 ];
+const COOLDOWN_SECONDS = 15;
 
 // Função para formatar a hora com dois dígitos
 const formatTime = (date: Date) => {
@@ -37,6 +38,8 @@ export default function Home() {
   const [signal, setSignal] = useState<Signal | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState(LOADING_MESSAGES[0]);
+  const [isCooldown, setIsCooldown] = useState(false);
+  const [cooldownTime, setCooldownTime] = useState(COOLDOWN_SECONDS);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -53,6 +56,23 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [isLoading]);
 
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isCooldown && cooldownTime > 0) {
+      timer = setTimeout(() => {
+        setCooldownTime(prevTime => prevTime - 1);
+      }, 1000);
+    } else if (isCooldown && cooldownTime === 0) {
+      setIsCooldown(false);
+      setCooldownTime(COOLDOWN_SECONDS);
+    }
+    return () => clearTimeout(timer);
+  }, [isCooldown, cooldownTime]);
+
+
+  const startCooldown = () => {
+    setIsCooldown(true);
+  };
 
   const handleGenerateSignal = () => {
     setIsLoading(true);
@@ -94,6 +114,7 @@ export default function Home() {
         });
       }
       setIsLoading(false);
+      startCooldown();
     }, delay);
   };
 
@@ -132,7 +153,7 @@ export default function Home() {
 
         <Button
           onClick={handleGenerateSignal}
-          disabled={isLoading}
+          disabled={isLoading || isCooldown}
           size="lg"
           className="mt-8 w-full rounded-full bg-primary py-8 text-xl font-bold uppercase tracking-wider text-primary-foreground shadow-lg shadow-primary/50 transition-transform duration-200 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
         >
@@ -140,6 +161,11 @@ export default function Home() {
             <>
               <Loader className="mr-2 h-6 w-6 animate-spin" />
               Buscando...
+            </>
+          ) : isCooldown ? (
+            <>
+              <Timer className="mr-2 h-6 w-6" />
+              Aguarde {cooldownTime}s
             </>
           ) : signal ? 'Gerar Novo Sinal' : 'Gerar Sinal'}
         </Button>
