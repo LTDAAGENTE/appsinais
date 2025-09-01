@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Flame, Loader, Timer, AlertCircle, Clock } from 'lucide-react';
+import { Flame, Loader, Timer, AlertCircle, Clock, CheckCircle } from 'lucide-react';
 
 interface Signal {
   asset: string;
@@ -157,7 +157,13 @@ export default function Home() {
             </CardHeader>
             <CardContent className="space-y-4 text-lg">
               <SignalInfo label="Ativo:" value={signal.asset} />
-              <SignalInfo label="Entrada às:" value={signal.entryTime} isTime={true} />
+              <div className="flex justify-between items-center border-b border-gray-700/50 pb-2">
+                <span className="font-medium text-gray-400">Entrada às:</span>
+                <div className="flex flex-col items-end">
+                  <span className="font-bold text-white">{signal.entryTime}</span>
+                  <span className="text-xs text-gray-400">Entrar exatamente no horário</span>
+                </div>
+              </div>
               <SignalInfo label="Expiração:" value={signal.expiration} />
               <SignalInfo label="Análise:" value={signal.analysis} isAnalysis={true} analysisType={signal.analysis} />
               <SignalInfo label="Proteção 1:" value={signal.protection1} isTime={true}/>
@@ -213,7 +219,7 @@ type SignalInfoProps = {
 const SignalInfo = ({ label, value, isTime = false, isAnalysis = false, analysisType }: SignalInfoProps) => {
     
     const valueClass = isAnalysis 
-        ? analysisType === 'Compra' ? 'text-green-400' : 'text-red-400'
+        ? analysisType === 'Compra' ? 'text-green-500' : 'text-red-500'
         : 'text-white';
     
     return (
@@ -262,3 +268,5 @@ const CountdownTimer = ({ endTime }: { endTime: number }) => {
         </div>
     );
 };
+
+    
