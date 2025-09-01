@@ -13,7 +13,6 @@ interface Signal {
   expiration: string;
   analysis: 'Compra' | 'Venda';
   protection1: string;
-  protection2: string;
   endTime: number; // End time in milliseconds
 }
 
@@ -133,7 +132,6 @@ export default function Home() {
         
         const endTime = new Date(entryTime.getTime() + expirationMinutes * 60 * 1000);
         const protection1 = new Date(entryTime.getTime() + 1 * 60 * 1000); 
-        const protection2 = new Date(protection1.getTime() + 1 * 60 * 1000);
 
         setSignal({
           asset: randomAsset,
@@ -142,7 +140,6 @@ export default function Home() {
           expiration: randomExpiration,
           analysis: randomAnalysis,
           protection1: formatTime(protection1),
-          protection2: formatTime(protection2),
           endTime: endTime.getTime(),
         });
       }
@@ -181,7 +178,6 @@ export default function Home() {
               <SignalInfo label="Expiração:" value={signal.expiration} />
               <SignalInfo label="Análise:" value={signal.analysis} isAnalysis={true} analysisType={signal.analysis} />
               <SignalInfo label="Proteção 1:" value={signal.protection1} isTime={true}/>
-              <SignalInfo label="Proteção 2:" value={signal.protection2} isTime={true}/>
               <CountdownTimer entryTimestamp={signal.entryTimestamp} endTime={signal.endTime} />
             </CardContent>
           </Card>
