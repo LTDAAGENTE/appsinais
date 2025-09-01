@@ -15,7 +15,7 @@ interface Signal {
 }
 
 const ASSETS = ['EUR/USD', 'GBP/JPY', 'AUD/CAD', 'USD/JPY', 'EUR/GBP OTC', 'AUD/USD OTC'];
-const EXPIRATIONS = ['1 minuto', '2 minutos', '5 minutos'];
+const EXPIRATIONS = ['1 minuto', '5 minutos'];
 
 // Função para formatar a hora com dois dígitos
 const formatTime = (date: Date) => {
