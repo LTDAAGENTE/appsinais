@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -236,13 +236,23 @@ const SignalInfo = ({ label, value, isTime = false, isAnalysis = false, analysis
 
 const CountdownTimer = ({ entryTimestamp, endTime }: { entryTimestamp: number, endTime: number }) => {
     const [now, setNow] = useState(Date.now());
+    const intervalRef = useRef<NodeJS.Timeout>();
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            setNow(Date.now());
-        }, 1000);
+        const update = () => setNow(Date.now());
 
-        return () => clearInterval(interval);
+        // Sincroniza com o próximo segundo
+        const firstTimeout = setTimeout(() => {
+            update();
+            intervalRef.current = setInterval(update, 1000);
+        }, 1000 - (new Date().getMilliseconds()));
+
+        return () => {
+            clearTimeout(firstTimeout);
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
+        };
     }, []);
 
     const hasStarted = now >= entryTimestamp;
