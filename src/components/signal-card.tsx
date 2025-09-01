@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowDownCircle, ArrowUpCircle, Target, ShieldX } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, Target, ShieldX, Clock } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -34,14 +34,20 @@ export function SignalCard({ signal }: SignalCardProps) {
     <Card className="w-full animate-fade-in-down overflow-hidden border-l-4" style={{ borderLeftColor: isBuy ? 'hsl(var(--primary))' : 'hsl(var(--destructive))' }}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-2xl font-bold">{signal.pair}</CardTitle>
-        <Badge variant={isBuy ? 'default' : 'destructive'} className="text-sm">
-          {isBuy ? (
-            <ArrowUpCircle className="mr-2 h-4 w-4" />
-          ) : (
-            <ArrowDownCircle className="mr-2 h-4 w-4" />
-          )}
-          {signal.direction.toUpperCase()}
-        </Badge>
+        <div className="flex items-center gap-2">
+           <Badge variant="outline" className="text-sm font-mono">
+             <Clock className="mr-2 h-4 w-4 text-muted-foreground"/>
+             {signal.durationMinutes} MIN
+           </Badge>
+           <Badge variant={isBuy ? 'default' : 'destructive'} className="text-sm">
+            {isBuy ? (
+              <ArrowUpCircle className="mr-2 h-4 w-4" />
+            ) : (
+              <ArrowDownCircle className="mr-2 h-4 w-4" />
+            )}
+            {signal.direction.toUpperCase()}
+          </Badge>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
         <div className="text-center">

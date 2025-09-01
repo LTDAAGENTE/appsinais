@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview Gera sinais de negociação de criptomoedas com par, direção, preço, confiança, TP, SL e timestamp.
+ * @fileOverview Gera sinais de negociação de criptomoedas com par, direção, preço, confiança, TP, SL, duração e timestamp.
  *
  * - generateCryptoSignal - Uma função que gera o sinal de negociação de cripto.
  * - GenerateCryptoSignalInput - O tipo de entrada para a função generateCryptoSignal.
@@ -23,6 +23,7 @@ const GenerateCryptoSignalOutputSchema = z.object({
   confidence: z.number().min(0).max(1).describe('O nível de confiança do sinal (0 a 1).'),
   takeProfit: z.number().describe('O preço sugerido para Take Profit.'),
   stopLoss: z.number().describe('O preço sugerido para Stop Loss.'),
+  durationMinutes: z.number().int().min(1).describe('A duração recomendada da operação em minutos (ex: 5, 15).'),
   timestamp: z.string().describe('O timestamp de quando o sinal foi gerado (formato ISO).'),
 });
 export type GenerateCryptoSignalOutput = z.infer<typeof GenerateCryptoSignalOutputSchema>;
@@ -61,9 +62,11 @@ const generateCryptoSignalPrompt = ai.definePrompt({
 
   Com base nas condições atuais do mercado, gere um sinal de negociação para o seguinte par de criptomoedas: {{{pair}}}.
 
-  Inclua o par de negociação, direção (compra ou venda), preço atual, nível de confiança (0 a 1), preço de take profit, preço de stop loss e o timestamp atual.
+  Inclua o par de negociação, direção (compra ou venda), preço atual, nível de confiança (0 a 1), preço de take profit, preço de stop loss, a duração da operação em minutos (por exemplo: 5, 10, 15) e o timestamp atual.
 
   Use a ferramenta calculateTakeProfitAndStopLoss para determinar valores razoáveis de take profit e stop loss.
+  
+  A duração da operação deve ser um valor inteiro que represente minutos.
 
   Certifique-se de que o timestamp esteja no formato ISO.
 
