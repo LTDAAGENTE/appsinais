@@ -3,9 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Flame, Loader, Timer, XCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-
+import { Flame, Loader, Timer, AlertCircle } from 'lucide-react';
 
 interface Signal {
   asset: string;
@@ -40,7 +38,7 @@ export default function Home() {
   const [loadingMessage, setLoadingMessage] = useState(LOADING_MESSAGES[0]);
   const [isCooldown, setIsCooldown] = useState(false);
   const [cooldownTime, setCooldownTime] = useState(COOLDOWN_SECONDS);
-  const { toast } = useToast();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -76,7 +74,8 @@ export default function Home() {
 
   const handleGenerateSignal = () => {
     setIsLoading(true);
-    setSignal(null); 
+    setSignal(null);
+    setError(null); 
     setLoadingMessage(LOADING_MESSAGES[0]);
 
     const delay = Math.random() * 4000 + 3000; // Simula entre 3 a 7 segundos
@@ -86,11 +85,7 @@ export default function Home() {
       const shouldFail = Math.random() < 0.2; // 20% de chance de falha
 
       if (shouldFail) {
-        toast({
-            variant: "destructive",
-            title: "Falha ao Gerar Sinal",
-            description: "Nenhuma oportunidade clara foi encontrada. Tente novamente em alguns minutos.",
-        })
+        setError("Nenhuma oportunidade clara foi encontrada. Tente novamente.");
         setSignal(null);
       } else {
         // Gera dados aleatórios
@@ -143,6 +138,12 @@ export default function Home() {
               <SignalInfo label="Proteção 2:" value={signal.protection2} isTime={true}/>
             </CardContent>
           </Card>
+        ) : error ? (
+            <div className="flex flex-col items-center justify-center text-center p-8 text-red-400 animate-fade-in-down">
+                <AlertCircle size={64} className="mb-4" />
+                <h1 className="text-2xl font-bold mb-2">Falha ao Gerar Sinal</h1>
+                <p className="text-gray-400">{error}</p>
+            </div>
         ) : (
            <div className="flex flex-col items-center justify-center text-center">
               <Flame size={64} className="mb-4 text-primary" />
@@ -167,7 +168,7 @@ export default function Home() {
               <Timer className="mr-2 h-6 w-6" />
               Aguarde {cooldownTime}s
             </>
-          ) : signal ? 'Gerar Novo Sinal' : 'Gerar Sinal'}
+          ) : signal || error ? 'Gerar Novo Sinal' : 'Gerar Sinal'}
         </Button>
       </div>
     </div>
