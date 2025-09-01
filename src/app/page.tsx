@@ -9,6 +9,7 @@ import { Flame, Loader, Timer, AlertCircle, Clock, CheckCircle } from 'lucide-re
 interface Signal {
   asset: string;
   entryTime: string;
+  entryTimestamp: number; // Entry time in milliseconds
   expiration: string;
   analysis: 'Compra' | 'Venda';
   protection1: string;
@@ -125,6 +126,7 @@ export default function Home() {
         setSignal({
           asset: randomAsset,
           entryTime: formatTime(entryTime),
+          entryTimestamp: entryTime.getTime(),
           expiration: randomExpiration,
           analysis: randomAnalysis,
           protection1: formatTime(protection1),
@@ -168,7 +170,7 @@ export default function Home() {
               <SignalInfo label="Análise:" value={signal.analysis} isAnalysis={true} analysisType={signal.analysis} />
               <SignalInfo label="Proteção 1:" value={signal.protection1} isTime={true}/>
               <SignalInfo label="Proteção 2:" value={signal.protection2} isTime={true}/>
-              <CountdownTimer endTime={signal.endTime} />
+              <CountdownTimer entryTimestamp={signal.entryTimestamp} endTime={signal.endTime} />
             </CardContent>
           </Card>
         ) : error ? (
@@ -232,24 +234,20 @@ const SignalInfo = ({ label, value, isTime = false, isAnalysis = false, analysis
     )
 }
 
-const CountdownTimer = ({ endTime }: { endTime: number }) => {
-    const [timeLeft, setTimeLeft] = useState(endTime - Date.now());
+const CountdownTimer = ({ entryTimestamp, endTime }: { entryTimestamp: number, endTime: number }) => {
+    const [now, setNow] = useState(Date.now());
 
     useEffect(() => {
-        if (timeLeft <= 0) return;
-
         const interval = setInterval(() => {
-            const newTimeLeft = endTime - Date.now();
-            if (newTimeLeft <= 0) {
-                clearInterval(interval);
-                setTimeLeft(0);
-            } else {
-                setTimeLeft(newTimeLeft);
-            }
+            setNow(Date.now());
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [endTime, timeLeft]);
+    }, []);
+
+    const hasStarted = now >= entryTimestamp;
+    const hasFinished = now >= endTime;
+    const timeLeft = endTime - now;
 
     const formatTimeLeft = (ms: number) => {
         if (ms <= 0) return "00:00";
@@ -258,15 +256,37 @@ const CountdownTimer = ({ endTime }: { endTime: number }) => {
         return `${minutes}:${seconds}`;
     };
 
+    if (hasFinished) {
+        return (
+            <div className="mt-4 flex flex-col items-center justify-center rounded-lg bg-gray-800 p-3">
+                <span className="text-sm font-medium text-gray-400">Sinal Finalizado</span>
+                <div className="flex items-center text-2xl font-bold text-red-500">
+                    <CheckCircle className="mr-2 h-6 w-6" />
+                    <span>00:00</span>
+                </div>
+            </div>
+        );
+    }
+    
+    if (hasStarted) {
+        return (
+            <div className="mt-4 flex flex-col items-center justify-center rounded-lg bg-gray-800 p-3">
+                <span className="text-sm font-medium text-gray-400">Tempo Restante</span>
+                <div className="flex items-center text-2xl font-bold text-primary">
+                    <Clock className="mr-2 h-6 w-6" />
+                    <span>{formatTimeLeft(timeLeft)}</span>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="mt-4 flex flex-col items-center justify-center rounded-lg bg-gray-800 p-3">
-            <span className="text-sm font-medium text-gray-400">Tempo Restante</span>
-            <div className="flex items-center text-2xl font-bold text-primary">
-                <Clock className="mr-2 h-6 w-6" />
-                <span>{formatTimeLeft(timeLeft)}</span>
+            <span className="text-sm font-medium text-gray-400">Aguardando horário de entrada...</span>
+             <div className="flex items-center text-2xl font-bold text-gray-500">
+                <Timer className="mr-2 h-6 w-6" />
+                <span>--:--</span>
             </div>
         </div>
     );
 };
-
-    
