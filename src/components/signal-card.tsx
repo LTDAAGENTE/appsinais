@@ -22,9 +22,9 @@ export function SignalCard({ signal }: SignalCardProps) {
   const isBuy = signal.direction === 'buy';
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'BRL',
       minimumFractionDigits: 2,
       maximumFractionDigits: 4,
     }).format(price);
