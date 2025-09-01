@@ -148,7 +148,8 @@ export default function Home() {
            <div className="flex flex-col items-center justify-center text-center">
               <Flame size={64} className="mb-4 text-primary" />
               <h1 className="text-3xl font-bold mb-2">Gerador de Sinais</h1>
-              <p className="text-gray-400">Clique no botão abaixo para gerar um novo sinal de opções binárias.</p>
+              <p className="text-gray-400 px-4">Inteligência artificial gerando melhor ponto de entrada na corretora Avalon Broker.</p>
+              <p className="text-gray-400 mt-2">Clique no botão abaixo para gerar um novo sinal.</p>
             </div>
         )}
 

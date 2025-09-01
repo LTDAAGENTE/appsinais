@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'Gerador de Sinais - Opções Binárias',
+  title: 'Gerador de Sinais para Avalon Broker',
   description: 'Gere sinais de negociação para opções binárias com um clique.',
 };
 
