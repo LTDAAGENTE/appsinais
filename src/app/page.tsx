@@ -31,11 +31,11 @@ export default function Home() {
         }
         setSignals(initialSignals.reverse()); 
       } catch (error) {
-        console.error('Failed to generate initial signals:', error);
+        console.error('Falha ao gerar sinais iniciais:', error);
         toast({
           variant: 'destructive',
-          title: 'Error',
-          description: 'Could not fetch initial trading signals. Please try again later.',
+          title: 'Erro',
+          description: 'Não foi possível buscar os sinais de negociação iniciais. Por favor, tente novamente mais tarde.',
         });
       } finally {
         setIsLoading(false);
@@ -51,7 +51,7 @@ export default function Home() {
         const newSignal = await generateCryptoSignal({ pair });
         setSignals((prev) => [newSignal, ...prev].slice(0, MAX_SIGNALS));
       } catch (error) {
-        console.error('Failed to generate new signal:', error);
+        console.error('Falha ao gerar novo sinal:', error);
         // Silently fail on interval errors to avoid spamming user with toasts
       }
     }, SIGNAL_GENERATION_INTERVAL);
@@ -84,8 +84,8 @@ export default function Home() {
           )}
           {!isLoading && filteredSignals.length === 0 && (
              <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/50 bg-card p-12 text-center">
-                <p className="text-lg font-medium text-muted-foreground">No signals to display for {selectedPair}.</p>
-                <p className="text-sm text-muted-foreground/80">New signals are generated every 5 seconds.</p>
+                <p className="text-lg font-medium text-muted-foreground">Nenhum sinal para exibir para {selectedPair}.</p>
+                <p className="text-sm text-muted-foreground/80">Novos sinais são gerados a cada 5 segundos.</p>
             </div>
           )}
           {filteredSignals.map((signal) => (

@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowDownCircle, ArrowUpCircle, Target, ShieldX } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
 type SignalCardProps = {
@@ -44,7 +45,7 @@ export function SignalCard({ signal }: SignalCardProps) {
       </CardHeader>
       <CardContent className="space-y-4 pt-4">
         <div className="text-center">
-          <p className="text-sm text-muted-foreground">Entry Price</p>
+          <p className="text-sm text-muted-foreground">Preço de Entrada</p>
           <p className="text-4xl font-bold tracking-tighter text-accent">
             {formatPrice(signal.price)}
           </p>
@@ -52,7 +53,7 @@ export function SignalCard({ signal }: SignalCardProps) {
 
         <div className="space-y-2">
             <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Confidence</span>
+                <span className="text-muted-foreground">Confiança</span>
                 <span className="font-medium">{ (signal.confidence * 100).toFixed(0) }%</span>
             </div>
             <Progress value={signal.confidence * 100} className={cn('h-2', !isBuy && '[&>div]:bg-destructive')} />
@@ -77,7 +78,7 @@ export function SignalCard({ signal }: SignalCardProps) {
       </CardContent>
       <CardFooter className="py-2 px-6">
         <CardDescription className="w-full text-right text-xs">
-          {format(new Date(signal.timestamp), "MMM d, yyyy 'at' h:mm:ss a")}
+          {format(new Date(signal.timestamp), "d 'de' MMMM 'de' yyyy 'às' HH:mm:ss", { locale: ptBR })}
         </CardDescription>
       </CardFooter>
     </Card>

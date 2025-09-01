@@ -21,15 +21,15 @@ export function AppHeader({ pairs, selectedPair, onPairChange }: AppHeaderProps)
       <div className="container flex h-16 items-center">
         <div className="mr-4 flex items-center">
           <Bitcoin className="mr-2 h-6 w-6 text-accent" />
-          <h1 className="text-xl font-bold tracking-tight">Crypto Signal Stream</h1>
+          <h1 className="text-xl font-bold tracking-tight">Fluxo de Sinais de Cripto</h1>
         </div>
         <div className="ml-auto flex items-center space-x-4">
           <Select value={selectedPair} onValueChange={onPairChange}>
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Filter by pair" />
+              <SelectValue placeholder="Filtrar por par" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="All">All Pairs</SelectItem>
+              <SelectItem value="All">Todos os Pares</SelectItem>
               {pairs.map((pair) => (
                 <SelectItem key={pair} value={pair}>
                   {pair}

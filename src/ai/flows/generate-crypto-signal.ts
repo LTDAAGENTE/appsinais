@@ -1,29 +1,29 @@
 'use server';
 
 /**
- * @fileOverview Generates cryptocurrency trading signals with pair, direction, price, confidence, TP, SL, and timestamp.
+ * @fileOverview Gera sinais de negociação de criptomoedas com par, direção, preço, confiança, TP, SL e timestamp.
  *
- * - generateCryptoSignal - A function that generates the crypto trading signal.
- * - GenerateCryptoSignalInput - The input type for the generateCryptoSignal function.
- * - GenerateCryptoSignalOutput - The return type for the generateCryptoSignal function.
+ * - generateCryptoSignal - Uma função que gera o sinal de negociação de cripto.
+ * - GenerateCryptoSignalInput - O tipo de entrada para a função generateCryptoSignal.
+ * - GenerateCryptoSignalOutput - O tipo de retorno para a função generateCryptoSignal.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateCryptoSignalInputSchema = z.object({
-  pair: z.string().describe('The cryptocurrency trading pair (e.g., BTC/USD).'),
+  pair: z.string().describe('O par de negociação de criptomoedas (ex: BTC/USD).'),
 });
 export type GenerateCryptoSignalInput = z.infer<typeof GenerateCryptoSignalInputSchema>;
 
 const GenerateCryptoSignalOutputSchema = z.object({
-  pair: z.string().describe('The cryptocurrency trading pair (e.g., BTC/USD).'),
-  direction: z.enum(['buy', 'sell']).describe('The trading direction (buy or sell).'),
-  price: z.number().describe('The current price of the cryptocurrency.'),
-  confidence: z.number().min(0).max(1).describe('The confidence level of the signal (0 to 1).'),
-  takeProfit: z.number().describe('The suggested take profit price.'),
-  stopLoss: z.number().describe('The suggested stop loss price.'),
-  timestamp: z.string().describe('The timestamp of when the signal was generated (ISO format).'),
+  pair: z.string().describe('O par de negociação de criptomoedas (ex: BTC/USD).'),
+  direction: z.enum(['buy', 'sell']).describe('A direção da negociação (compra ou venda).'),
+  price: z.number().describe('O preço atual da criptomoeda.'),
+  confidence: z.number().min(0).max(1).describe('O nível de confiança do sinal (0 a 1).'),
+  takeProfit: z.number().describe('O preço sugerido para Take Profit.'),
+  stopLoss: z.number().describe('O preço sugerido para Stop Loss.'),
+  timestamp: z.string().describe('O timestamp de quando o sinal foi gerado (formato ISO).'),
 });
 export type GenerateCryptoSignalOutput = z.infer<typeof GenerateCryptoSignalOutputSchema>;
 
@@ -33,21 +33,21 @@ export async function generateCryptoSignal(input: GenerateCryptoSignalInput): Pr
 
 const calculateTakeProfitAndStopLoss = ai.defineTool({
   name: 'calculateTakeProfitAndStopLoss',
-  description: 'Calculates reasonable take profit and stop loss values based on the current price and trading pair.',
+  description: 'Calcula valores razoáveis de take profit e stop loss com base no preço atual e no par de negociação.',
   inputSchema: z.object({
-    pair: z.string().describe('The cryptocurrency trading pair (e.g., BTC/USD).'),
-    price: z.number().describe('The current price of the cryptocurrency.'),
-    direction: z.enum(['buy', 'sell']).describe('The trading direction (buy or sell).'),
+    pair: z.string().describe('O par de negociação de criptomoedas (ex: BTC/USD).'),
+    price: z.number().describe('O preço atual da criptomoeda.'),
+    direction: z.enum(['buy', 'sell']).describe('A direção da negociação (compra ou venda).'),
   }),
   outputSchema: z.object({
-    takeProfit: z.number().describe('The calculated take profit price.'),
-    stopLoss: z.number().describe('The calculated stop loss price.'),
+    takeProfit: z.number().describe('O preço calculado para Take Profit.'),
+    stopLoss: z.number().describe('O preço calculado para Stop Loss.'),
   }),
 }, async (input) => {
-  // Placeholder implementation:  A real implementation would calculate TP and SL based on volatility, support levels, etc.
+  // Implementação de exemplo: Uma implementação real calcularia TP e SL com base na volatilidade, níveis de suporte, etc.
   const {price, direction} = input;
-  const takeProfit = direction === 'buy' ? price * 1.02 : price * 0.98; // 2% profit
-  const stopLoss = direction === 'buy' ? price * 0.98 : price * 1.02; // 2% loss
+  const takeProfit = direction === 'buy' ? price * 1.02 : price * 0.98; // 2% de lucro
+  const stopLoss = direction === 'buy' ? price * 0.98 : price * 1.02; // 2% de perda
   return {takeProfit, stopLoss};
 });
 
@@ -57,17 +57,17 @@ const generateCryptoSignalPrompt = ai.definePrompt({
   input: {schema: GenerateCryptoSignalInputSchema},
   output: {schema: GenerateCryptoSignalOutputSchema},
   tools: [calculateTakeProfitAndStopLoss],
-  prompt: `You are an expert cryptocurrency trading signal generator.
+  prompt: `Você é um gerador especialista em sinais de negociação de criptomoedas.
 
-  Based on the current market conditions, generate a trading signal for the following cryptocurrency pair: {{{pair}}}.
+  Com base nas condições atuais do mercado, gere um sinal de negociação para o seguinte par de criptomoedas: {{{pair}}}.
 
-  Include the trading pair, direction (buy or sell), current price, confidence level (0 to 1), take profit price, stop loss price, and the current timestamp.
+  Inclua o par de negociação, direção (compra ou venda), preço atual, nível de confiança (0 a 1), preço de take profit, preço de stop loss e o timestamp atual.
 
-  Use the calculateTakeProfitAndStopLoss tool to determine reasonable take profit and stop loss values.
+  Use a ferramenta calculateTakeProfitAndStopLoss para determinar valores razoáveis de take profit e stop loss.
 
-  Make sure the timestamp is in ISO format.
+  Certifique-se de que o timestamp esteja no formato ISO.
 
-  Output should be in JSON format.
+  A saída deve ser em formato JSON.
   `,
 });
 
