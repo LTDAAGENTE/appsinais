@@ -110,18 +110,30 @@ export default function Home() {
         setError("Nenhuma oportunidade clara foi encontrada. Tente novamente.");
         setSignal(null);
       } else {
-        // Gera dados aleatórios
         const randomAsset = ASSETS[Math.floor(Math.random() * ASSETS.length)];
         const randomExpiration = EXPIRATIONS[Math.floor(Math.random() * EXPIRATIONS.length)];
         const randomAnalysis = Math.random() > 0.5 ? 'Compra' : 'Venda';
         const expirationMinutes = parseInt(randomExpiration.split(' ')[0]);
 
-        // Gera horários
         const now = new Date();
-        const entryTime = new Date(now.getTime() + 1 * 60 * 1000); // 1 minuto a partir de agora
+        let entryTime = new Date(now.getTime() + 1 * 60 * 1000); // Default to 1 minute from now
+
+        if (expirationMinutes === 5) {
+          const minutes = now.getMinutes();
+          const nextFive = Math.ceil((minutes + 1) / 5) * 5; // +1 to ensure it's in the future
+          entryTime = new Date(now);
+          entryTime.setMinutes(nextFive);
+          entryTime.setSeconds(0, 0);
+
+          // If calculated time is in the past, add 5 minutes
+          if (entryTime.getTime() <= now.getTime()) {
+              entryTime.setMinutes(entryTime.getMinutes() + 5);
+          }
+        }
+        
         const endTime = new Date(entryTime.getTime() + expirationMinutes * 60 * 1000);
-        const protection1 = new Date(entryTime.getTime() + 1 * 60 * 1000); // 1 minuto após a entrada
-        const protection2 = new Date(protection1.getTime() + 1 * 60 * 1000); // 1 minuto após a proteção 1
+        const protection1 = new Date(entryTime.getTime() + 1 * 60 * 1000); 
+        const protection2 = new Date(protection1.getTime() + 1 * 60 * 1000);
 
         setSignal({
           asset: randomAsset,
