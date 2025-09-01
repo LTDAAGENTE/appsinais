@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { Flame, Loader, Timer, AlertCircle } from 'lucide-react';
 
 interface Signal {
@@ -24,6 +25,7 @@ const LOADING_MESSAGES = [
     "Localizando próximo sinal...",
 ];
 const COOLDOWN_SECONDS = 15;
+const LOADING_DURATION = Math.random() * 4000 + 3000; // Simula entre 3 a 7 segundos
 
 // Função para formatar a hora com dois dígitos
 const formatTime = (date: Date) => {
@@ -36,22 +38,43 @@ export default function Home() {
   const [signal, setSignal] = useState<Signal | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState(LOADING_MESSAGES[0]);
+  const [progress, setProgress] = useState(0);
   const [isCooldown, setIsCooldown] = useState(false);
   const [cooldownTime, setCooldownTime] = useState(COOLDOWN_SECONDS);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let messageInterval: NodeJS.Timeout;
+    let progressInterval: NodeJS.Timeout;
+
     if (isLoading) {
-      interval = setInterval(() => {
+      setProgress(0);
+      setLoadingMessage(LOADING_MESSAGES[0]);
+
+      messageInterval = setInterval(() => {
         setLoadingMessage(prevMessage => {
             const currentIndex = LOADING_MESSAGES.indexOf(prevMessage);
             const nextIndex = (currentIndex + 1) % LOADING_MESSAGES.length;
             return LOADING_MESSAGES[nextIndex];
         });
       }, 1500);
+
+      const progressIncrement = 100 / (LOADING_DURATION / 100);
+      progressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev >= 100) {
+            clearInterval(progressInterval);
+            return 100;
+          }
+          return prev + progressIncrement;
+        });
+      }, 100);
+
     }
-    return () => clearInterval(interval);
+    return () => {
+        clearInterval(messageInterval);
+        clearInterval(progressInterval);
+    };
   }, [isLoading]);
 
   useEffect(() => {
@@ -76,9 +99,6 @@ export default function Home() {
     setIsLoading(true);
     setSignal(null);
     setError(null); 
-    setLoadingMessage(LOADING_MESSAGES[0]);
-
-    const delay = Math.random() * 4000 + 3000; // Simula entre 3 a 7 segundos
 
     setTimeout(() => {
       // Simula uma chance de falha
@@ -109,8 +129,9 @@ export default function Home() {
         });
       }
       setIsLoading(false);
+      setProgress(100);
       startCooldown();
-    }, delay);
+    }, LOADING_DURATION);
   };
 
   return (
@@ -120,7 +141,8 @@ export default function Home() {
             <div className="flex flex-col items-center justify-center text-center p-8">
               <Loader size={64} className="mb-4 text-primary animate-spin" />
               <h1 className="text-2xl font-bold mb-2">{loadingMessage}</h1>
-              <p className="text-gray-400">Por favor, aguarde...</p>
+              <p className="text-gray-400 mb-4">Inteligência artificial gerando melhor ponto de entrada na corretora Avalon Broker.</p>
+              <Progress value={progress} className="w-full" />
             </div>
         ) : signal ? (
           <Card className="animate-fade-in-down w-full border-2 border-primary bg-gray-900 shadow-lg shadow-primary/30">
@@ -148,8 +170,7 @@ export default function Home() {
            <div className="flex flex-col items-center justify-center text-center">
               <Flame size={64} className="mb-4 text-primary" />
               <h1 className="text-3xl font-bold mb-2">Gerador de Sinais</h1>
-              <p className="text-gray-400 px-4">Inteligência artificial gerando melhor ponto de entrada na corretora Avalon Broker.</p>
-              <p className="text-gray-400 mt-2">Clique no botão abaixo para gerar um novo sinal.</p>
+              <p className="text-gray-400 mt-2 px-4">Clique no botão abaixo para gerar um novo sinal para a corretora Avalon Broker.</p>
             </div>
         )}
 
@@ -199,3 +220,5 @@ const SignalInfo = ({ label, value, isTime = false, isAnalysis = false, analysis
         </div>
     )
 }
+
+    
