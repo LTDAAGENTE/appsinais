@@ -1,115 +1,114 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { generateCryptoSignal, type GenerateCryptoSignalOutput } from '@/ai/flows/generate-crypto-signal';
-import { AppHeader } from '@/components/app-header';
-import { SignalCard } from '@/components/signal-card';
-import { useToast } from '@/hooks/use-toast';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Sparkles } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Flame } from 'lucide-react';
 
-const TRADING_PAIRS = ['BTC/USD', 'ETH/USD', 'SOL/USD', 'DOGE/USD', 'XRP/USD'];
-const MAX_SIGNALS = 50;
+interface Signal {
+  asset: string;
+  entryTime: string;
+  expiration: string;
+  analysis: 'Compra' | 'Venda';
+  protection1: string;
+  protection2: string;
+}
+
+const ASSETS = ['EUR/USD', 'GBP/JPY', 'AUD/CAD', 'USD/JPY', 'EUR/GBP OTC', 'AUD/USD OTC'];
+const EXPIRATIONS = ['1 minuto', '2 minutos', '5 minutos'];
+
+// Função para formatar a hora com dois dígitos
+const formatTime = (date: Date) => {
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
+};
 
 export default function Home() {
-  const [signals, setSignals] = useState<GenerateCryptoSignalOutput[]>([]);
-  const [selectedPair, setSelectedPair] = useState<string>('All');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const { toast } = useToast();
+  const [signal, setSignal] = useState<Signal | null>(null);
 
-  const handleGenerateSignal = async () => {
-    setIsGenerating(true);
-    try {
-      const pair = selectedPair === 'All'
-        ? TRADING_PAIRS[Math.floor(Math.random() * TRADING_PAIRS.length)]
-        : selectedPair;
-        
-      const newSignal = await generateCryptoSignal({ pair });
-      setSignals((prev) => [newSignal, ...prev].slice(0, MAX_SIGNALS));
-    } catch (error: any) {
-      console.error('Falha ao gerar novo sinal:', error);
-      let description = 'Não foi possível gerar um sinal de negociação. Por favor, tente novamente.';
-      if (error?.message?.includes('503')) {
-        description = 'O serviço está sobrecarregado no momento. Por favor, tente novamente em alguns instantes.';
-      }
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao Gerar Sinal',
-        description: description,
-      });
-    } finally {
-      setIsGenerating(false);
-    }
+  const handleGenerateSignal = () => {
+    // Gera dados aleatórios
+    const randomAsset = ASSETS[Math.floor(Math.random() * ASSETS.length)];
+    const randomExpiration = EXPIRATIONS[Math.floor(Math.random() * EXPIRATIONS.length)];
+    const randomAnalysis = Math.random() > 0.5 ? 'Compra' : 'Venda';
+
+    // Gera horários
+    const now = new Date();
+    const entryTime = new Date(now.getTime() + 1 * 60 * 1000); // 1 minuto a partir de agora
+    const protection1 = new Date(entryTime.getTime() + 1 * 60 * 1000); // 1 minuto após a entrada
+    const protection2 = new Date(protection1.getTime() + 1 * 60 * 1000); // 1 minuto após a proteção 1
+
+
+    setSignal({
+      asset: randomAsset,
+      entryTime: formatTime(entryTime),
+      expiration: randomExpiration,
+      analysis: randomAnalysis,
+      protection1: formatTime(protection1),
+      protection2: formatTime(protection2),
+    });
   };
 
-  const filteredSignals = useMemo(() => {
-    if (selectedPair === 'All') {
-      return signals;
-    }
-    return signals.filter((signal) => signal.pair === selectedPair);
-  }, [signals, selectedPair]);
-
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      <AppHeader
-        pairs={TRADING_PAIRS}
-        selectedPair={selectedPair}
-        onPairChange={setSelectedPair}
-      />
-      <main className="flex flex-1 flex-col items-center gap-8 p-4 md:p-8">
-        <div className="w-full max-w-2xl space-y-4">
-          <div className="rounded-lg border bg-card p-6 shadow-sm">
-            <div className="flex flex-col items-center gap-4 text-center">
-              <h2 className="text-2xl font-bold tracking-tight">Gere seu Sinal para IQ Option</h2>
-              <p className="max-w-md text-muted-foreground">
-                Selecione um par de moedas e clique no botão para receber um sinal de day trade gerado por nossa IA para a plataforma IQ Option.
-              </p>
-              <Button onClick={handleGenerateSignal} disabled={isGenerating} size="lg">
-                <Sparkles className="mr-2 h-5 w-5" />
-                {isGenerating ? 'Gerando Sinal...' : 'Gere seu sinal gratuitamente'}
-              </Button>
+    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-gray-900 p-4 text-white">
+      <div className="w-full max-w-sm">
+        {signal ? (
+          <Card className="animate-fade-in-down w-full border-2 border-primary bg-gray-900 shadow-lg shadow-primary/30">
+            <CardHeader className="items-center pb-4 text-center">
+              <CardTitle className="text-2xl font-bold tracking-tight text-primary">
+                ENTRADA CONFIRMADA
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-lg">
+              <SignalInfo label="Ativo:" value={signal.asset} />
+              <SignalInfo label="Entrada às:" value={signal.entryTime} isTime={true} />
+              <SignalInfo label="Expiração:" value={signal.expiration} />
+              <SignalInfo label="Análise:" value={signal.analysis} isAnalysis={true} analysisType={signal.analysis} />
+              <SignalInfo label="Proteção 1:" value={signal.protection1} isTime={true}/>
+              <SignalInfo label="Proteção 2:" value={signal.protection2} isTime={true}/>
+            </CardContent>
+          </Card>
+        ) : (
+           <div className="flex flex-col items-center justify-center text-center">
+              <Flame size={64} className="mb-4 text-primary" />
+              <h1 className="text-3xl font-bold mb-2">Gerador de Sinais</h1>
+              <p className="text-gray-400">Clique no botão abaixo para gerar um novo sinal de opções binárias.</p>
             </div>
-          </div>
-          
-          {isGenerating && signals.length === 0 && <SignalCardSkeleton />}
+        )}
 
-          {!isGenerating && signals.length === 0 && (
-             <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/50 bg-card p-12 text-center">
-                <p className="text-lg font-medium text-muted-foreground">Nenhum sinal gerado ainda.</p>
-                <p className="text-sm text-muted-foreground/80">Clique no botão acima para começar.</p>
-            </div>
-          )}
-
-          {filteredSignals.map((signal) => (
-            <SignalCard key={signal.timestamp + signal.pair} signal={signal} />
-          ))}
-        </div>
-      </main>
+        <Button
+          onClick={handleGenerateSignal}
+          size="lg"
+          className="mt-8 w-full rounded-full bg-primary py-8 text-xl font-bold uppercase tracking-wider text-primary-foreground shadow-lg shadow-primary/50 transition-transform duration-200 hover:scale-105 active:scale-95"
+        >
+          {signal ? 'Gerar Novo Sinal' : 'Gerar Sinal'}
+        </Button>
+      </div>
     </div>
   );
 }
 
-const SignalCardSkeleton = () => (
-  <div className="w-full space-y-4 rounded-lg border bg-card p-6">
-    <div className="flex items-center justify-between">
-      <Skeleton className="h-8 w-1/3" />
-      <Skeleton className="h-8 w-1/4" />
-    </div>
-    <div className="flex flex-col items-center space-y-2 pt-4">
-      <Skeleton className="h-4 w-1/4" />
-      <Skeleton className="h-10 w-1/2" />
-    </div>
-    <div className="space-y-2 pt-4">
-      <div className="flex justify-between">
-         <Skeleton className="h-4 w-1/4" />
-         <Skeleton className="h-4 w-1/5" />
-      </div>
-      <Skeleton className="h-2 w-full" />
-    </div>
-    <div className="grid grid-cols-2 gap-4 pt-4">
-        <Skeleton className="h-24 w-full rounded-md" />
-        <Skeleton className="h-24 w-full rounded-md" />
-    </div>
-  </div>
-);
+type SignalInfoProps = {
+    label: string;
+    value: string;
+    isTime?: boolean;
+    isAnalysis?: boolean;
+    analysisType?: 'Compra' | 'Venda';
+}
+
+const SignalInfo = ({ label, value, isTime = false, isAnalysis = false, analysisType }: SignalInfoProps) => {
+    
+    const valueClass = isAnalysis 
+        ? analysisType === 'Compra' ? 'text-green-400' : 'text-red-400'
+        : 'text-white';
+    
+    return (
+        <div className="flex justify-between border-b border-gray-700/50 pb-2">
+            <span className="font-medium text-gray-400">{label}</span>
+            <span className={`font-bold ${valueClass}`}>
+                {value}
+            </span>
+        </div>
+    )
+}
