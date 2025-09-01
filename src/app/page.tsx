@@ -4,7 +4,9 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Flame, Loader, Timer, AlertCircle, Clock, CheckCircle } from 'lucide-react';
+import { Flame, Loader, Timer, AlertCircle, Clock, CheckCircle, BarChart2 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 
 interface Signal {
   asset: string;
@@ -13,11 +15,13 @@ interface Signal {
   expiration: string;
   analysis: 'Compra' | 'Venda';
   protection1: string;
+  volatility: string;
   endTime: number; // End time in milliseconds
 }
 
 const ASSETS = ['EUR/USD', 'GBP/JPY', 'AUD/CAD', 'USD/JPY', 'EUR/GBP OTC', 'AUD/USD OTC'];
 const EXPIRATIONS = ['1 minuto', '5 minutos'];
+const VOLATILITY = ['Baixa', 'Média', 'Alta'];
 const LOADING_MESSAGES = [
     "Analisando o mercado...",
     "Buscando as melhores oportunidades...",
@@ -43,6 +47,7 @@ export default function Home() {
   const [isCooldown, setIsCooldown] = useState(false);
   const [cooldownTime, setCooldownTime] = useState(COOLDOWN_SECONDS);
   const [error, setError] = useState<string | null>(null);
+  const [selectedAsset, setSelectedAsset] = useState<string | null>(null);
 
   useEffect(() => {
     let messageInterval: NodeJS.Timeout;
@@ -97,6 +102,11 @@ export default function Home() {
   };
 
   const handleGenerateSignal = () => {
+    if (!selectedAsset) {
+        setError("Por favor, selecione um par de moedas para continuar.");
+        return;
+    }
+    
     setIsLoading(true);
     setSignal(null);
     setError(null); 
@@ -109,9 +119,9 @@ export default function Home() {
         setError("Nenhuma oportunidade clara foi encontrada. Tente novamente.");
         setSignal(null);
       } else {
-        const randomAsset = ASSETS[Math.floor(Math.random() * ASSETS.length)];
         const randomExpiration = EXPIRATIONS[Math.floor(Math.random() * EXPIRATIONS.length)];
         const randomAnalysis = Math.random() > 0.5 ? 'Compra' : 'Venda';
+        const randomVolatility = VOLATILITY[Math.floor(Math.random() * VOLATILITY.length)];
         const expirationMinutes = parseInt(randomExpiration.split(' ')[0]);
 
         const now = new Date();
@@ -134,12 +144,13 @@ export default function Home() {
         const protection1 = new Date(entryTime.getTime() + 1 * 60 * 1000); 
 
         setSignal({
-          asset: randomAsset,
+          asset: selectedAsset,
           entryTime: formatTime(entryTime),
           entryTimestamp: entryTime.getTime(),
           expiration: randomExpiration,
           analysis: randomAnalysis,
           protection1: formatTime(protection1),
+          volatility: randomVolatility,
           endTime: endTime.getTime(),
         });
       }
@@ -168,6 +179,13 @@ export default function Home() {
             </CardHeader>
             <CardContent className="space-y-4 text-lg">
               <SignalInfo label="Ativo:" value={signal.asset} />
+               <div className="flex justify-between items-center border-b border-gray-700/50 pb-2">
+                <span className="font-medium text-gray-400">Volatilidade:</span>
+                 <div className="flex items-center gap-2">
+                    <BarChart2 size={20} className="text-primary"/>
+                    <span className="font-bold text-white">{signal.volatility}</span>
+                 </div>
+              </div>
               <div className="flex justify-between items-center border-b border-gray-700/50 pb-2">
                 <span className="font-medium text-gray-400">Entrada às:</span>
                 <div className="flex flex-col items-end">
@@ -181,23 +199,34 @@ export default function Home() {
               <CountdownTimer entryTimestamp={signal.entryTimestamp} endTime={signal.endTime} />
             </CardContent>
           </Card>
-        ) : error ? (
-            <div className="flex flex-col items-center justify-center text-center p-8 text-red-400 animate-fade-in-down">
-                <AlertCircle size={64} className="mb-4" />
-                <h1 className="text-2xl font-bold mb-2">Falha ao Gerar Sinal</h1>
-                <p className="text-gray-400">{error}</p>
-            </div>
         ) : (
-           <div className="flex flex-col items-center justify-center text-center">
+           <div className="flex flex-col items-center justify-center text-center w-full">
               <Flame size={64} className="mb-4 text-primary" />
               <h1 className="text-3xl font-bold mb-2">Gerador de Sinais</h1>
-              <p className="text-gray-400 mt-2 px-4">Clique no botão abaixo para gerar um novo sinal para a corretora Avalon Broker.</p>
+              <p className="text-gray-400 mt-2 px-4 mb-6">Selecione o ativo e clique no botão para gerar um sinal para a corretora Avalon Broker.</p>
+               <Select onValueChange={setSelectedAsset} value={selectedAsset || ''}>
+                <SelectTrigger className="w-full mb-4">
+                  <SelectValue placeholder="Selecione um par de moedas" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ASSETS.map(asset => (
+                    <SelectItem key={asset} value={asset}>{asset}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+               {error && (
+                <div className="flex flex-col items-center justify-center text-center p-4 my-4 text-red-400 animate-fade-in-down bg-red-900/20 rounded-lg">
+                    <AlertCircle size={40} className="mb-2" />
+                    <h2 className="text-lg font-bold mb-1">Falha ao Gerar Sinal</h2>
+                    <p className="text-gray-300 text-sm">{error}</p>
+                </div>
+              )}
             </div>
         )}
 
         <Button
           onClick={handleGenerateSignal}
-          disabled={isLoading || isCooldown}
+          disabled={isLoading || isCooldown || (!signal && !error && !selectedAsset)}
           size="lg"
           className="mt-8 w-full rounded-full bg-primary py-8 text-xl font-bold uppercase tracking-wider text-primary-foreground shadow-lg shadow-primary/50 transition-transform duration-200 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
         >
@@ -211,7 +240,7 @@ export default function Home() {
               <Timer className="mr-2 h-6 w-6" />
               Aguarde {cooldownTime}s
             </>
-          ) : signal || error ? 'Gerar Novo Sinal' : 'Gerar Sinal'}
+          ) : signal || (error && selectedAsset) ? 'Gerar Novo Sinal' : 'Gerar Sinal'}
         </Button>
       </div>
     </div>
