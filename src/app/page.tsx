@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Flame, Loader } from 'lucide-react';
+import { Flame, Loader, XCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+
 
 interface Signal {
   asset: string;
@@ -16,6 +18,13 @@ interface Signal {
 
 const ASSETS = ['EUR/USD', 'GBP/JPY', 'AUD/CAD', 'USD/JPY', 'EUR/GBP OTC', 'AUD/USD OTC'];
 const EXPIRATIONS = ['1 minuto', '5 minutos'];
+const LOADING_MESSAGES = [
+    "Analisando o mercado...",
+    "Buscando as melhores oportunidades...",
+    "Verificando volatilidade...",
+    "Finalizando análise técnica...",
+    "Localizando próximo sinal...",
+];
 
 // Função para formatar a hora com dois dígitos
 const formatTime = (date: Date) => {
@@ -27,35 +36,65 @@ const formatTime = (date: Date) => {
 export default function Home() {
   const [signal, setSignal] = useState<Signal | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState(LOADING_MESSAGES[0]);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isLoading) {
+      interval = setInterval(() => {
+        setLoadingMessage(prevMessage => {
+            const currentIndex = LOADING_MESSAGES.indexOf(prevMessage);
+            const nextIndex = (currentIndex + 1) % LOADING_MESSAGES.length;
+            return LOADING_MESSAGES[nextIndex];
+        });
+      }, 1500);
+    }
+    return () => clearInterval(interval);
+  }, [isLoading]);
+
 
   const handleGenerateSignal = () => {
     setIsLoading(true);
     setSignal(null); 
+    setLoadingMessage(LOADING_MESSAGES[0]);
 
-    // Simula um tempo de espera para a geração do sinal
+    const delay = Math.random() * 4000 + 3000; // Simula entre 3 a 7 segundos
+
     setTimeout(() => {
-      // Gera dados aleatórios
-      const randomAsset = ASSETS[Math.floor(Math.random() * ASSETS.length)];
-      const randomExpiration = EXPIRATIONS[Math.floor(Math.random() * EXPIRATIONS.length)];
-      const randomAnalysis = Math.random() > 0.5 ? 'Compra' : 'Venda';
+      // Simula uma chance de falha
+      const shouldFail = Math.random() < 0.2; // 20% de chance de falha
 
-      // Gera horários
-      const now = new Date();
-      const entryTime = new Date(now.getTime() + 1 * 60 * 1000); // 1 minuto a partir de agora
-      const protection1 = new Date(entryTime.getTime() + 1 * 60 * 1000); // 1 minuto após a entrada
-      const protection2 = new Date(protection1.getTime() + 1 * 60 * 1000); // 1 minuto após a proteção 1
+      if (shouldFail) {
+        toast({
+            variant: "destructive",
+            title: "Falha ao Gerar Sinal",
+            description: "Nenhuma oportunidade clara foi encontrada. Tente novamente em alguns minutos.",
+        })
+        setSignal(null);
+      } else {
+        // Gera dados aleatórios
+        const randomAsset = ASSETS[Math.floor(Math.random() * ASSETS.length)];
+        const randomExpiration = EXPIRATIONS[Math.floor(Math.random() * EXPIRATIONS.length)];
+        const randomAnalysis = Math.random() > 0.5 ? 'Compra' : 'Venda';
 
+        // Gera horários
+        const now = new Date();
+        const entryTime = new Date(now.getTime() + 1 * 60 * 1000); // 1 minuto a partir de agora
+        const protection1 = new Date(entryTime.getTime() + 1 * 60 * 1000); // 1 minuto após a entrada
+        const protection2 = new Date(protection1.getTime() + 1 * 60 * 1000); // 1 minuto após a proteção 1
 
-      setSignal({
-        asset: randomAsset,
-        entryTime: formatTime(entryTime),
-        expiration: randomExpiration,
-        analysis: randomAnalysis,
-        protection1: formatTime(protection1),
-        protection2: formatTime(protection2),
-      });
+        setSignal({
+          asset: randomAsset,
+          entryTime: formatTime(entryTime),
+          expiration: randomExpiration,
+          analysis: randomAnalysis,
+          protection1: formatTime(protection1),
+          protection2: formatTime(protection2),
+        });
+      }
       setIsLoading(false);
-    }, 2000); // 2 segundos de simulação
+    }, delay);
   };
 
   return (
@@ -64,8 +103,8 @@ export default function Home() {
         {isLoading ? (
             <div className="flex flex-col items-center justify-center text-center p-8">
               <Loader size={64} className="mb-4 text-primary animate-spin" />
-              <h1 className="text-2xl font-bold mb-2">Gerando Sinal...</h1>
-              <p className="text-gray-400">Aguarde um momento.</p>
+              <h1 className="text-2xl font-bold mb-2">{loadingMessage}</h1>
+              <p className="text-gray-400">Por favor, aguarde...</p>
             </div>
         ) : signal ? (
           <Card className="animate-fade-in-down w-full border-2 border-primary bg-gray-900 shadow-lg shadow-primary/30">
@@ -100,7 +139,7 @@ export default function Home() {
            {isLoading ? (
             <>
               <Loader className="mr-2 h-6 w-6 animate-spin" />
-              Gerando...
+              Buscando...
             </>
           ) : signal ? 'Gerar Novo Sinal' : 'Gerar Sinal'}
         </Button>
