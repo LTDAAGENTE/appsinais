@@ -82,6 +82,9 @@ const generateCryptoSignalFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await generateCryptoSignalPrompt(input);
-    return output!;
+    if (!output) {
+      throw new Error('Falha ao gerar o sinal: a resposta do modelo foi inválida.');
+    }
+    return output;
   }
 );
