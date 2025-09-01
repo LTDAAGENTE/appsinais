@@ -1,63 +1,43 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { generateCryptoSignal, type GenerateCryptoSignalOutput } from '@/ai/flows/generate-crypto-signal';
 import { AppHeader } from '@/components/app-header';
 import { SignalCard } from '@/components/signal-card';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { Sparkles } from 'lucide-react';
 
 const TRADING_PAIRS = ['BTC/USD', 'ETH/USD', 'SOL/USD', 'DOGE/USD', 'XRP/USD'];
-const SIGNAL_GENERATION_INTERVAL = 5000; // 5 seconds
 const MAX_SIGNALS = 50;
 
 export default function Home() {
   const [signals, setSignals] = useState<GenerateCryptoSignalOutput[]>([]);
   const [selectedPair, setSelectedPair] = useState<string>('All');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Generate initial signals
-    const generateInitialSignals = async () => {
-      setIsLoading(true);
-      const initialSignals: GenerateCryptoSignalOutput[] = [];
-      try {
-        // Generate fewer initial signals for faster load
-        for (let i = 0; i < 3; i++) {
-          const pair = TRADING_PAIRS[i % TRADING_PAIRS.length];
-          const signal = await generateCryptoSignal({ pair });
-          initialSignals.push(signal);
-        }
-        setSignals(initialSignals.reverse()); 
-      } catch (error) {
-        console.error('Falha ao gerar sinais iniciais:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Erro',
-          description: 'Não foi possível buscar os sinais de negociação iniciais. Por favor, tente novamente mais tarde.',
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    generateInitialSignals();
-
-    // Set up interval for new signals
-    const intervalId = setInterval(async () => {
-      try {
-        const pair = TRADING_PAIRS[Math.floor(Math.random() * TRADING_PAIRS.length)];
-        const newSignal = await generateCryptoSignal({ pair });
-        setSignals((prev) => [newSignal, ...prev].slice(0, MAX_SIGNALS));
-      } catch (error) {
-        console.error('Falha ao gerar novo sinal:', error);
-        // Silently fail on interval errors to avoid spamming user with toasts
-      }
-    }, SIGNAL_GENERATION_INTERVAL);
-
-    return () => clearInterval(intervalId);
-  }, [toast]);
+  const handleGenerateSignal = async () => {
+    setIsGenerating(true);
+    try {
+      const pair = selectedPair === 'All'
+        ? TRADING_PAIRS[Math.floor(Math.random() * TRADING_PAIRS.length)]
+        : selectedPair;
+        
+      const newSignal = await generateCryptoSignal({ pair });
+      setSignals((prev) => [newSignal, ...prev].slice(0, MAX_SIGNALS));
+    } catch (error) {
+      console.error('Falha ao gerar novo sinal:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro',
+        description: 'Não foi possível gerar um sinal de negociação. Por favor, tente novamente.',
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const filteredSignals = useMemo(() => {
     if (selectedPair === 'All') {
@@ -75,19 +55,28 @@ export default function Home() {
       />
       <main className="flex flex-1 flex-col items-center gap-8 p-4 md:p-8">
         <div className="w-full max-w-2xl space-y-4">
-          {isLoading && (
-            <>
-              <SignalCardSkeleton />
-              <SignalCardSkeleton />
-              <SignalCardSkeleton />
-            </>
-          )}
-          {!isLoading && filteredSignals.length === 0 && (
+          <div className="rounded-lg border bg-card p-6 shadow-sm">
+            <div className="flex flex-col items-center gap-4 text-center">
+              <h2 className="text-2xl font-bold tracking-tight">Gere seu Sinal Gratuitamente</h2>
+              <p className="max-w-md text-muted-foreground">
+                Selecione um par de moedas (ou todos) e clique no botão abaixo para receber um sinal de negociação em tempo real gerado por nossa IA.
+              </p>
+              <Button onClick={handleGenerateSignal} disabled={isGenerating} size="lg">
+                <Sparkles className="mr-2 h-5 w-5" />
+                {isGenerating ? 'Gerando Sinal...' : `Gerar Sinal para ${selectedPair === 'All' ? 'Par Aleatório' : selectedPair}`}
+              </Button>
+            </div>
+          </div>
+          
+          {isGenerating && signals.length === 0 && <SignalCardSkeleton />}
+
+          {!isGenerating && signals.length === 0 && (
              <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/50 bg-card p-12 text-center">
-                <p className="text-lg font-medium text-muted-foreground">Nenhum sinal para exibir para {selectedPair}.</p>
-                <p className="text-sm text-muted-foreground/80">Novos sinais são gerados a cada 5 segundos.</p>
+                <p className="text-lg font-medium text-muted-foreground">Nenhum sinal gerado ainda.</p>
+                <p className="text-sm text-muted-foreground/80">Clique no botão acima para começar.</p>
             </div>
           )}
+
           {filteredSignals.map((signal) => (
             <SignalCard key={signal.timestamp + signal.pair} signal={signal} />
           ))}
