@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Flame, Loader, Timer, AlertCircle } from 'lucide-react';
+import { Flame, Loader, Timer, AlertCircle, Clock } from 'lucide-react';
 
 interface Signal {
   asset: string;
@@ -13,6 +13,7 @@ interface Signal {
   analysis: 'Compra' | 'Venda';
   protection1: string;
   protection2: string;
+  endTime: number; // End time in milliseconds
 }
 
 const ASSETS = ['EUR/USD', 'GBP/JPY', 'AUD/CAD', 'USD/JPY', 'EUR/GBP OTC', 'AUD/USD OTC'];
@@ -112,10 +113,12 @@ export default function Home() {
         const randomAsset = ASSETS[Math.floor(Math.random() * ASSETS.length)];
         const randomExpiration = EXPIRATIONS[Math.floor(Math.random() * EXPIRATIONS.length)];
         const randomAnalysis = Math.random() > 0.5 ? 'Compra' : 'Venda';
+        const expirationMinutes = parseInt(randomExpiration.split(' ')[0]);
 
         // Gera horários
         const now = new Date();
         const entryTime = new Date(now.getTime() + 1 * 60 * 1000); // 1 minuto a partir de agora
+        const endTime = new Date(entryTime.getTime() + expirationMinutes * 60 * 1000);
         const protection1 = new Date(entryTime.getTime() + 1 * 60 * 1000); // 1 minuto após a entrada
         const protection2 = new Date(protection1.getTime() + 1 * 60 * 1000); // 1 minuto após a proteção 1
 
@@ -126,6 +129,7 @@ export default function Home() {
           analysis: randomAnalysis,
           protection1: formatTime(protection1),
           protection2: formatTime(protection2),
+          endTime: endTime.getTime(),
         });
       }
       setIsLoading(false);
@@ -158,6 +162,7 @@ export default function Home() {
               <SignalInfo label="Análise:" value={signal.analysis} isAnalysis={true} analysisType={signal.analysis} />
               <SignalInfo label="Proteção 1:" value={signal.protection1} isTime={true}/>
               <SignalInfo label="Proteção 2:" value={signal.protection2} isTime={true}/>
+              <CountdownTimer endTime={signal.endTime} />
             </CardContent>
           </Card>
         ) : error ? (
@@ -221,4 +226,39 @@ const SignalInfo = ({ label, value, isTime = false, isAnalysis = false, analysis
     )
 }
 
-    
+const CountdownTimer = ({ endTime }: { endTime: number }) => {
+    const [timeLeft, setTimeLeft] = useState(endTime - Date.now());
+
+    useEffect(() => {
+        if (timeLeft <= 0) return;
+
+        const interval = setInterval(() => {
+            const newTimeLeft = endTime - Date.now();
+            if (newTimeLeft <= 0) {
+                clearInterval(interval);
+                setTimeLeft(0);
+            } else {
+                setTimeLeft(newTimeLeft);
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [endTime, timeLeft]);
+
+    const formatTimeLeft = (ms: number) => {
+        if (ms <= 0) return "00:00";
+        const minutes = String(Math.floor((ms / 1000) / 60)).padStart(2, '0');
+        const seconds = String(Math.floor((ms / 1000) % 60)).padStart(2, '0');
+        return `${minutes}:${seconds}`;
+    };
+
+    return (
+        <div className="mt-4 flex flex-col items-center justify-center rounded-lg bg-gray-800 p-3">
+            <span className="text-sm font-medium text-gray-400">Tempo Restante</span>
+            <div className="flex items-center text-2xl font-bold text-primary">
+                <Clock className="mr-2 h-6 w-6" />
+                <span>{formatTimeLeft(timeLeft)}</span>
+            </div>
+        </div>
+    );
+};
