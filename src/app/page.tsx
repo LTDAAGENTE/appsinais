@@ -27,12 +27,16 @@ export default function Home() {
         
       const newSignal = await generateCryptoSignal({ pair });
       setSignals((prev) => [newSignal, ...prev].slice(0, MAX_SIGNALS));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Falha ao gerar novo sinal:', error);
+      let description = 'Não foi possível gerar um sinal de negociação. Por favor, tente novamente.';
+      if (error?.message?.includes('503')) {
+        description = 'O serviço está sobrecarregado no momento. Por favor, tente novamente em alguns instantes.';
+      }
       toast({
         variant: 'destructive',
-        title: 'Erro',
-        description: 'Não foi possível gerar um sinal de negociação. Por favor, tente novamente.',
+        title: 'Erro ao Gerar Sinal',
+        description: description,
       });
     } finally {
       setIsGenerating(false);
@@ -63,7 +67,7 @@ export default function Home() {
               </p>
               <Button onClick={handleGenerateSignal} disabled={isGenerating} size="lg">
                 <Sparkles className="mr-2 h-5 w-5" />
-                {isGenerating ? 'Gerando Sinal...' : `Gerar Sinal para ${selectedPair === 'All' ? 'Par Aleatório' : selectedPair}`}
+                {isGenerating ? 'Gerando Sinal...' : 'Gere seu sinal gratuitamente'}
               </Button>
             </div>
           </div>
