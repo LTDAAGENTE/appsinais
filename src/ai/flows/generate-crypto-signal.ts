@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview Gera sinais de negociação de criptomoedas com par, direção, preço, confiança, TP, SL, duração e timestamp.
+ * @fileOverview Gera sinais de negociação de criptomoedas para day traders na plataforma IQ Option.
  *
  * - generateCryptoSignal - Uma função que gera o sinal de negociação de cripto.
  * - GenerateCryptoSignalInput - O tipo de entrada para a função generateCryptoSignal.
@@ -29,7 +29,11 @@ const GenerateCryptoSignalOutputSchema = z.object({
 export type GenerateCryptoSignalOutput = z.infer<typeof GenerateCryptoSignalOutputSchema>;
 
 export async function generateCryptoSignal(input: GenerateCryptoSignalInput): Promise<GenerateCryptoSignalOutput> {
-  return generateCryptoSignalFlow(input);
+  const result = await generateCryptoSignalFlow(input);
+    if (!result) {
+        throw new Error('Falha ao gerar o sinal: a resposta do modelo foi inválida.');
+    }
+    return result;
 }
 
 const calculateTakeProfitAndStopLoss = ai.defineTool({
@@ -58,9 +62,11 @@ const generateCryptoSignalPrompt = ai.definePrompt({
   input: {schema: GenerateCryptoSignalInputSchema},
   output: {schema: GenerateCryptoSignalOutputSchema},
   tools: [calculateTakeProfitAndStopLoss],
-  prompt: `Você é um gerador especialista em sinais de negociação de criptomoedas.
+  prompt: `Você é um especialista em gerar sinais de negociação para day traders na plataforma IQ Option.
 
   Com base nas condições atuais do mercado, gere um sinal de negociação para o seguinte par de criptomoedas: {{{pair}}}.
+
+  O sinal deve ser otimizado para operações de curto prazo, típicas de day trade na IQ Option.
 
   Inclua o par de negociação, direção (compra ou venda), preço atual, nível de confiança (0 a 1), preço de take profit, preço de stop loss, a duração da operação em minutos (por exemplo: 5, 10, 15) e o timestamp atual.
 
@@ -82,9 +88,6 @@ const generateCryptoSignalFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await generateCryptoSignalPrompt(input);
-    if (!output) {
-      throw new Error('Falha ao gerar o sinal: a resposta do modelo foi inválida.');
-    }
-    return output;
+    return output!;
   }
 );

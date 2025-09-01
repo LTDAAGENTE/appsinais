@@ -21,7 +21,7 @@ export function AppHeader({ pairs, selectedPair, onPairChange }: AppHeaderProps)
       <div className="container flex h-16 items-center">
         <div className="mr-4 flex items-center">
           <Bitcoin className="mr-2 h-6 w-6 text-accent" />
-          <h1 className="text-xl font-bold tracking-tight">Fluxo de Sinais de Cripto</h1>
+          <h1 className="text-xl font-bold tracking-tight">Sinais IQ Option</h1>
         </div>
         <div className="ml-auto flex items-center space-x-4">
           <Select value={selectedPair} onValueChange={onPairChange}>

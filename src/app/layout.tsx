@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'Fluxo de Sinais de Cripto',
-  description: 'Sinais de negociação de criptomoedas em tempo real.',
+  title: 'Sinais para Day Trade - IQ Option',
+  description: 'Sinais de negociação de criptomoedas em tempo real para IQ Option.',
 };
 
 export default function RootLayout({

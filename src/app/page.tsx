@@ -57,9 +57,9 @@ export default function Home() {
         <div className="w-full max-w-2xl space-y-4">
           <div className="rounded-lg border bg-card p-6 shadow-sm">
             <div className="flex flex-col items-center gap-4 text-center">
-              <h2 className="text-2xl font-bold tracking-tight">Gere seu Sinal Gratuitamente</h2>
+              <h2 className="text-2xl font-bold tracking-tight">Gere seu Sinal para IQ Option</h2>
               <p className="max-w-md text-muted-foreground">
-                Selecione um par de moedas (ou todos) e clique no botão abaixo para receber um sinal de negociação em tempo real gerado por nossa IA.
+                Selecione um par de moedas e clique no botão para receber um sinal de day trade gerado por nossa IA para a plataforma IQ Option.
               </p>
               <Button onClick={handleGenerateSignal} disabled={isGenerating} size="lg">
                 <Sparkles className="mr-2 h-5 w-5" />
