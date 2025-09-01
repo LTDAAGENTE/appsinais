@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Flame, Loader, Timer, AlertCircle, Clock, CheckCircle, BarChart2 } from 'lucide-react';
+import { Flame, Loader, Timer, AlertCircle, Clock, CheckCircle, BarChart2, Users, TrendingUp } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
@@ -48,6 +48,22 @@ export default function Home() {
   const [cooldownTime, setCooldownTime] = useState(COOLDOWN_SECONDS);
   const [error, setError] = useState<string | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<string | null>(null);
+  const [activeUsers, setActiveUsers] = useState<number | null>(null);
+  const [winningUsers, setWinningUsers] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Initial random numbers for social proof
+    setActiveUsers(Math.floor(Math.random() * (180 - 120 + 1)) + 120);
+    setWinningUsers(Math.floor(Math.random() * (95 - 75 + 1)) + 75);
+
+    // Update numbers periodically to make it look dynamic
+    const interval = setInterval(() => {
+        setActiveUsers(prev => (prev ? prev + (Math.floor(Math.random() * 5) - 2) : null));
+        setWinningUsers(prev => (prev ? prev + (Math.floor(Math.random() * 3) - 1) : null));
+    }, 3000); // update every 3 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     let messageInterval: NodeJS.Timeout;
@@ -204,6 +220,22 @@ export default function Home() {
               <Flame size={64} className="mb-4 text-primary" />
               <h1 className="text-3xl font-bold mb-2">Gerador de Sinais</h1>
               <p className="text-gray-400 mt-2 px-4 mb-6">Selecione o ativo e clique no botão para gerar um sinal para a corretora Avalon Broker.</p>
+               <div className="flex justify-around w-full mb-6 text-sm">
+                <div className="flex items-center gap-2">
+                    <Users size={20} className="text-primary" />
+                    <div>
+                        <p className="font-bold">{activeUsers ?? '---'}</p>
+                        <p className="text-gray-400">Usuários ativos</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <TrendingUp size={20} className="text-green-500" />
+                     <div>
+                        <p className="font-bold">{winningUsers ?? '--'}%</p>
+                        <p className="text-gray-400">Ganhando agora</p>
+                    </div>
+                </div>
+              </div>
                <Select onValueChange={setSelectedAsset} value={selectedAsset || ''}>
                 <SelectTrigger className="w-full mb-4">
                   <SelectValue placeholder="Selecione um par de moedas" />
