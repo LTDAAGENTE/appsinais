@@ -4,9 +4,10 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Flame, Loader, Timer, AlertCircle, Clock, CheckCircle, BarChart2, Users, TrendingUp, Target } from 'lucide-react';
+import { Flame, Loader, Timer, AlertCircle, Clock, CheckCircle, BarChart2, Users, TrendingUp, Target, Settings, Zap, Shield } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 
 interface Signal {
   asset: string;
@@ -20,7 +21,15 @@ interface Signal {
   assertiveness: number;
 }
 
-const ASSETS = ['EUR/USD', 'GBP/JPY', 'AUD/CAD', 'USD/JPY', 'EUR/GBP OTC', 'AUD/USD OTC', 'Arbitrum', 'Cosmos', 'Bitcoin Cash', 'Bonk', 'Bitcoin', 'Cardano', 'Dash'];
+interface IndicatorConfig {
+  assetType: 'crypto' | 'forex';
+  riskLevel: 'low' | 'medium' | 'high';
+}
+
+const ASSETS = {
+    forex: ['EUR/USD', 'GBP/JPY', 'AUD/CAD', 'USD/JPY', 'EUR/GBP OTC', 'AUD/USD OTC'],
+    crypto: ['Arbitrum', 'Cosmos', 'Bitcoin Cash', 'Bonk', 'Bitcoin', 'Cardano', 'Dash']
+};
 const EXPIRATIONS = ['1 minuto', '5 minutos'];
 const VOLATILITY = ['Baixa', 'Média', 'Alta'];
 const LOADING_MESSAGES = [
@@ -42,6 +51,9 @@ const formatTime = (date: Date) => {
 };
 
 export default function Home() {
+  const [view, setView] = useState<'config' | 'generator'>('config');
+  const [config, setConfig] = useState<IndicatorConfig>({ assetType: 'forex', riskLevel: 'medium' });
+  
   const [signal, setSignal] = useState<Signal | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState(LOADING_MESSAGES[0]);
@@ -52,6 +64,13 @@ export default function Home() {
   const [selectedAsset, setSelectedAsset] = useState<string | null>(null);
   const [activeUsers, setActiveUsers] = useState<number | null>(null);
   const [winningUsers, setWinningUsers] = useState<number | null>(null);
+  
+  const availableAssets = ASSETS[config.assetType];
+
+  useEffect(() => {
+    // Reset selected asset if asset type changes
+    setSelectedAsset(null);
+  }, [config.assetType]);
 
   useEffect(() => {
     // Initial random numbers for social proof
@@ -121,7 +140,7 @@ export default function Home() {
 
   const handleGenerateSignal = () => {
     if (!selectedAsset) {
-        setError("Por favor, selecione um par de moedas para continuar.");
+        setError("Por favor, selecione um ativo para continuar.");
         return;
     }
 
@@ -139,7 +158,31 @@ export default function Home() {
       } else {
         const randomExpiration = EXPIRATIONS[Math.floor(Math.random() * EXPIRATIONS.length)];
         const randomAnalysis = Math.random() > 0.5 ? 'Compra' : 'Venda';
-        const randomVolatility = VOLATILITY[Math.floor(Math.random() * VOLATILITY.length)];
+        
+        const volatilityIndex = VOLATILITY.indexOf(VOLATILITY[Math.floor(Math.random() * VOLATILITY.length)]);
+        let randomVolatility = VOLATILITY[volatilityIndex];
+
+        let minAssertiveness = 69;
+        let maxAssertiveness = 96;
+
+        switch (config.riskLevel) {
+            case 'low':
+                randomVolatility = 'Baixa';
+                minAssertiveness = 85;
+                maxAssertiveness = 98;
+                break;
+            case 'medium':
+                randomVolatility = VOLATILITY[Math.floor(Math.random() * 2) + 1]; // Média ou Alta
+                minAssertiveness = 75;
+                maxAssertiveness = 92;
+                break;
+            case 'high':
+                randomVolatility = 'Alta';
+                minAssertiveness = 65;
+                maxAssertiveness = 88;
+                break;
+        }
+
         const expirationMinutes = parseInt(randomExpiration.split(' ')[0]);
 
         const now = new Date();
@@ -170,7 +213,7 @@ export default function Home() {
           protection1: formatTime(protection1),
           volatility: randomVolatility,
           endTime: endTime.getTime(),
-          assertiveness: Math.floor(Math.random() * (96 - 69 + 1)) + 69,
+          assertiveness: Math.floor(Math.random() * (maxAssertiveness - minAssertiveness + 1)) + minAssertiveness,
         });
       }
       setIsLoading(false);
@@ -179,123 +222,196 @@ export default function Home() {
     }, LOADING_DURATION);
   };
 
+  const renderConfigView = () => (
+    <div className="flex flex-col items-center justify-center text-center w-full animate-fade-in-down">
+        <Settings size={64} className="mb-4 text-primary" />
+        <h1 className="text-3xl font-bold mb-2">Configurar Indicador</h1>
+        <p className="text-gray-400 mt-2 px-4 mb-8">Escolha suas preferências para gerar os melhores sinais.</p>
+        
+        <Card className="w-full bg-gray-900 border-gray-800 p-6">
+            <CardContent className="space-y-6 text-left">
+                <div>
+                    <Label className="font-bold text-lg mb-3 block">Tipo de Ativo</Label>
+                    <RadioGroup value={config.assetType} onValueChange={(v) => setConfig(c => ({...c, assetType: v as any}))} className="grid grid-cols-2 gap-4">
+                        <div>
+                            <RadioGroupItem value="forex" id="forex" className="peer sr-only" />
+                            <Label htmlFor="forex" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                                <BarChart2 className="mb-3 h-6 w-6" />
+                                Forex
+                            </Label>
+                        </div>
+                        <div>
+                            <RadioGroupItem value="crypto" id="crypto" className="peer sr-only" />
+                             <Label htmlFor="crypto" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
+                                <Zap className="mb-3 h-6 w-6" />
+                                Cripto
+                            </Label>
+                        </div>
+                    </RadioGroup>
+                </div>
+                <div>
+                    <Label className="font-bold text-lg mb-3 block">Nível de Risco</Label>
+                     <RadioGroup value={config.riskLevel} onValueChange={(v) => setConfig(c => ({...c, riskLevel: v as any}))} className="flex gap-2">
+                        <div className="flex-1">
+                            <RadioGroupItem value="low" id="low" className="peer sr-only" />
+                            <Label htmlFor="low" className="flex items-center justify-center rounded-md border-2 border-muted bg-popover p-3 text-sm hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-green-500 [&:has([data-state=checked])]:border-green-500">
+                                <Shield className="mr-2 h-4 w-4 text-green-500"/> Baixo
+                            </Label>
+                        </div>
+                         <div className="flex-1">
+                            <RadioGroupItem value="medium" id="medium" className="peer sr-only" />
+                            <Label htmlFor="medium" className="flex items-center justify-center rounded-md border-2 border-muted bg-popover p-3 text-sm hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-yellow-500 [&:has([data-state=checked])]:border-yellow-500">
+                                <Zap className="mr-2 h-4 w-4 text-yellow-500"/> Médio
+                            </Label>
+                        </div>
+                         <div className="flex-1">
+                            <RadioGroupItem value="high" id="high" className="peer sr-only" />
+                            <Label htmlFor="high" className="flex items-center justify-center rounded-md border-2 border-muted bg-popover p-3 text-sm hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-red-500 [&:has([data-state=checked])]:border-red-500">
+                                <Flame className="mr-2 h-4 w-4 text-red-500"/> Alto
+                            </Label>
+                        </div>
+                    </RadioGroup>
+                </div>
+            </CardContent>
+        </Card>
+
+        <Button
+            onClick={() => setView('generator')}
+            size="lg"
+            className="mt-8 w-full rounded-full bg-primary py-8 text-xl font-bold uppercase tracking-wider text-primary-foreground shadow-lg shadow-primary/50 transition-transform duration-200 hover:scale-105 active:scale-95"
+        >
+            Avançar
+        </Button>
+    </div>
+  );
+
+  const renderGeneratorView = () => (
+    <>
+      {isLoading ? (
+          <div className="flex flex-col items-center justify-center text-center p-8">
+            <Loader size={64} className="mb-4 text-primary animate-spin" />
+            <h1 className="text-2xl font-bold mb-2">{loadingMessage}</h1>
+            <p className="text-gray-400 mb-4">Inteligência artificial gerando melhor ponto de entrada na corretora Avalon Broker.</p>
+            <Progress value={progress} className="w-full" />
+          </div>
+      ) : (
+          <div className="flex flex-col items-center justify-center text-center w-full">
+              {/* Initial Screen Content (only shown before first signal) */}
+              {!signal && !error && (
+                  <>
+                      <Flame size={64} className="mb-4 text-primary" />
+                      <h1 className="text-3xl font-bold mb-2">Gerador de Sinais</h1>
+                      <p className="text-gray-400 mt-2 px-4 mb-6">Selecione o ativo e clique no botão para gerar um sinal para a corretora Avalon Broker.</p>
+                      <div className="flex justify-around w-full mb-6 text-sm">
+                          <div className="flex items-center gap-2">
+                              <Users size={20} className="text-primary" />
+                              <div>
+                                  <p className="font-bold">{activeUsers ?? '---'}</p>
+                                  <p className="text-gray-400">Usuários ativos</p>
+                              </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                              <TrendingUp size={20} className="text-green-500" />
+                              <div>
+                                  <p className="font-bold">{winningUsers ?? '--'}%</p>
+                                  <p className="text-gray-400">Ganhando agora</p>
+                              </div>
+                          </div>
+                      </div>
+                  </>
+              )}
+              
+              {/* Asset Selector (always visible when not loading) */}
+              <Select onValueChange={(value) => { setSelectedAsset(value); setError(null); setSignal(null); }} value={selectedAsset || ''}>
+                <SelectTrigger className="w-full mb-4">
+                  <SelectValue placeholder="Selecione um ativo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableAssets.map(asset => (
+                    <SelectItem key={asset} value={asset}>{asset}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Error message display */}
+              {error && (
+                  <div className="flex flex-col items-center justify-center text-center p-4 my-4 text-red-400 animate-fade-in-down bg-red-900/20 rounded-lg">
+                      <AlertCircle size={40} className="mb-2" />
+                      <h2 className="text-lg font-bold mb-1">Atenção</h2>
+                      <p className="text-gray-300 text-sm">{error}</p>
+                  </div>
+              )}
+              
+              {/* Signal Card */}
+              {signal && (
+                  <Card className="animate-fade-in-down w-full border-2 border-primary bg-gray-900 shadow-lg shadow-primary/30 mt-4">
+                      <CardHeader className="items-center pb-4 text-center">
+                          <CardTitle className="text-2xl font-bold tracking-tight text-primary">
+                              ENTRADA CONFIRMADA
+                          </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4 text-lg">
+                          <SignalInfo label="Ativo:" value={signal.asset} />
+                          <div className="flex justify-between items-center border-b border-gray-700/50 pb-2">
+                              <span className="font-medium text-gray-400">Volatilidade:</span>
+                              <div className="flex items-center gap-2">
+                                  <BarChart2 size={20} className="text-primary"/>
+                                  <span className="font-bold text-white">{signal.volatility}</span>
+                              </div>
+                          </div>
+                          <div className="flex justify-between items-center border-b border-gray-700/50 pb-2">
+                              <span className="font-medium text-gray-400">Assertividade:</span>
+                              <div className="flex items-center gap-2">
+                                  <Target size={20} className="text-primary"/>
+                                  <span className={`font-bold ${signal.assertiveness < 75 ? 'text-red-500' : 'text-green-500'}`}>{signal.assertiveness}%</span>
+                              </div>
+                          </div>
+                          <div className="flex justify-between items-center border-b border-gray-700/50 pb-2">
+                              <span className="font-medium text-gray-400">Entrada às:</span>
+                              <div className="flex flex-col items-end">
+                                  <span className="font-bold text-white">{signal.entryTime}</span>
+                                  <span className="text-xs text-gray-400">Entrar exatamente no horário</span>
+                              </div>
+                          </div>
+                          <SignalInfo label="Expiração:" value={signal.expiration} />
+                          <SignalInfo label="Análise:" value={signal.analysis} isAnalysis={true} analysisType={signal.analysis} />
+                          <SignalInfo label="Proteção 1:" value={signal.protection1} isTime={true}/>
+                          <CountdownTimer entryTimestamp={signal.entryTimestamp} endTime={signal.endTime} />
+                      </CardContent>
+                  </Card>
+              )}
+          </div>
+      )}
+
+      <Button
+        onClick={handleGenerateSignal}
+        disabled={isLoading || isCooldown || !selectedAsset}
+        size="lg"
+        className="mt-8 w-full rounded-full bg-primary py-8 text-xl font-bold uppercase tracking-wider text-primary-foreground shadow-lg shadow-primary/50 transition-transform duration-200 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
+      >
+         {isLoading ? (
+          <>
+            <Loader className="mr-2 h-6 w-6 animate-spin" />
+            Buscando...
+          </>
+        ) : isCooldown ? (
+          <>
+            <Timer className="mr-2 h-6 w-6" />
+            Aguarde {cooldownTime}s
+          </>
+        ) : signal || error ? 'Gerar Novo Sinal' : 'Gerar Sinal'}
+      </Button>
+
+      <Button variant="link" onClick={() => setView('config')} className="mt-4 text-gray-400">
+        Voltar para configurações
+      </Button>
+    </>
+  );
+
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center bg-gray-900 p-4 text-white">
       <div className="w-full max-w-sm">
-        {isLoading ? (
-            <div className="flex flex-col items-center justify-center text-center p-8">
-              <Loader size={64} className="mb-4 text-primary animate-spin" />
-              <h1 className="text-2xl font-bold mb-2">{loadingMessage}</h1>
-              <p className="text-gray-400 mb-4">Inteligência artificial gerando melhor ponto de entrada na corretora Avalon Broker.</p>
-              <Progress value={progress} className="w-full" />
-            </div>
-        ) : (
-            <div className="flex flex-col items-center justify-center text-center w-full">
-                {/* Initial Screen Content (only shown before first signal) */}
-                {!signal && !error && (
-                    <>
-                        <Flame size={64} className="mb-4 text-primary" />
-                        <h1 className="text-3xl font-bold mb-2">Gerador de Sinais</h1>
-                        <p className="text-gray-400 mt-2 px-4 mb-6">Selecione o ativo e clique no botão para gerar um sinal para a corretora Avalon Broker.</p>
-                        <div className="flex justify-around w-full mb-6 text-sm">
-                            <div className="flex items-center gap-2">
-                                <Users size={20} className="text-primary" />
-                                <div>
-                                    <p className="font-bold">{activeUsers ?? '---'}</p>
-                                    <p className="text-gray-400">Usuários ativos</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <TrendingUp size={20} className="text-green-500" />
-                                <div>
-                                    <p className="font-bold">{winningUsers ?? '--'}%</p>
-                                    <p className="text-gray-400">Ganhando agora</p>
-                                </div>
-                            </div>
-                        </div>
-                    </>
-                )}
-                
-                {/* Asset Selector (always visible when not loading) */}
-                <Select onValueChange={(value) => { setSelectedAsset(value); setError(null); setSignal(null); }} value={selectedAsset || ''}>
-                  <SelectTrigger className="w-full mb-4">
-                    <SelectValue placeholder="Selecione um par de moedas" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ASSETS.map(asset => (
-                      <SelectItem key={asset} value={asset}>{asset}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {/* Error message display */}
-                {error && (
-                    <div className="flex flex-col items-center justify-center text-center p-4 my-4 text-red-400 animate-fade-in-down bg-red-900/20 rounded-lg">
-                        <AlertCircle size={40} className="mb-2" />
-                        <h2 className="text-lg font-bold mb-1">Atenção</h2>
-                        <p className="text-gray-300 text-sm">{error}</p>
-                    </div>
-                )}
-                
-                {/* Signal Card */}
-                {signal && (
-                    <Card className="animate-fade-in-down w-full border-2 border-primary bg-gray-900 shadow-lg shadow-primary/30 mt-4">
-                        <CardHeader className="items-center pb-4 text-center">
-                            <CardTitle className="text-2xl font-bold tracking-tight text-primary">
-                                ENTRADA CONFIRMADA
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4 text-lg">
-                            <SignalInfo label="Ativo:" value={signal.asset} />
-                            <div className="flex justify-between items-center border-b border-gray-700/50 pb-2">
-                                <span className="font-medium text-gray-400">Volatilidade:</span>
-                                <div className="flex items-center gap-2">
-                                    <BarChart2 size={20} className="text-primary"/>
-                                    <span className="font-bold text-white">{signal.volatility}</span>
-                                </div>
-                            </div>
-                            <div className="flex justify-between items-center border-b border-gray-700/50 pb-2">
-                                <span className="font-medium text-gray-400">Assertividade:</span>
-                                <div className="flex items-center gap-2">
-                                    <Target size={20} className="text-primary"/>
-                                    <span className={`font-bold ${signal.assertiveness < 75 ? 'text-red-500' : 'text-green-500'}`}>{signal.assertiveness}%</span>
-                                </div>
-                            </div>
-                            <div className="flex justify-between items-center border-b border-gray-700/50 pb-2">
-                                <span className="font-medium text-gray-400">Entrada às:</span>
-                                <div className="flex flex-col items-end">
-                                    <span className="font-bold text-white">{signal.entryTime}</span>
-                                    <span className="text-xs text-gray-400">Entrar exatamente no horário</span>
-                                </div>
-                            </div>
-                            <SignalInfo label="Expiração:" value={signal.expiration} />
-                            <SignalInfo label="Análise:" value={signal.analysis} isAnalysis={true} analysisType={signal.analysis} />
-                            <SignalInfo label="Proteção 1:" value={signal.protection1} isTime={true}/>
-                            <CountdownTimer entryTimestamp={signal.entryTimestamp} endTime={signal.endTime} />
-                        </CardContent>
-                    </Card>
-                )}
-            </div>
-        )}
-
-        <Button
-          onClick={handleGenerateSignal}
-          disabled={isLoading || isCooldown || !selectedAsset}
-          size="lg"
-          className="mt-8 w-full rounded-full bg-primary py-8 text-xl font-bold uppercase tracking-wider text-primary-foreground shadow-lg shadow-primary/50 transition-transform duration-200 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
-        >
-           {isLoading ? (
-            <>
-              <Loader className="mr-2 h-6 w-6 animate-spin" />
-              Buscando...
-            </>
-          ) : isCooldown ? (
-            <>
-              <Timer className="mr-2 h-6 w-6" />
-              Aguarde {cooldownTime}s
-            </>
-          ) : signal || error ? 'Gerar Novo Sinal' : 'Gerar Sinal'}
-        </Button>
+        {view === 'config' ? renderConfigView() : renderGeneratorView()}
       </div>
     </div>
   );
