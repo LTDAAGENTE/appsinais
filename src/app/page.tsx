@@ -209,7 +209,7 @@ export default function Home() {
                 <span className="font-medium text-gray-400">Assertividade:</span>
                  <div className="flex items-center gap-2">
                     <Target size={20} className="text-primary"/>
-                    <span className="font-bold text-white">{signal.assertiveness}%</span>
+                    <span className={`font-bold ${signal.assertiveness < 75 ? 'text-red-500' : 'text-green-500'}`}>{signal.assertiveness}%</span>
                  </div>
               </div>
               <div className="flex justify-between items-center border-b border-gray-700/50 pb-2">
