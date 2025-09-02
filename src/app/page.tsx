@@ -189,86 +189,98 @@ export default function Home() {
               <p className="text-gray-400 mb-4">Inteligência artificial gerando melhor ponto de entrada na corretora Avalon Broker.</p>
               <Progress value={progress} className="w-full" />
             </div>
-        ) : signal ? (
-          <Card className="animate-fade-in-down w-full border-2 border-primary bg-gray-900 shadow-lg shadow-primary/30">
-            <CardHeader className="items-center pb-4 text-center">
-              <CardTitle className="text-2xl font-bold tracking-tight text-primary">
-                ENTRADA CONFIRMADA
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-lg">
-              <SignalInfo label="Ativo:" value={signal.asset} />
-               <div className="flex justify-between items-center border-b border-gray-700/50 pb-2">
-                <span className="font-medium text-gray-400">Volatilidade:</span>
-                 <div className="flex items-center gap-2">
-                    <BarChart2 size={20} className="text-primary"/>
-                    <span className="font-bold text-white">{signal.volatility}</span>
-                 </div>
-              </div>
-               <div className="flex justify-between items-center border-b border-gray-700/50 pb-2">
-                <span className="font-medium text-gray-400">Assertividade:</span>
-                 <div className="flex items-center gap-2">
-                    <Target size={20} className="text-primary"/>
-                    <span className={`font-bold ${signal.assertiveness < 75 ? 'text-red-500' : 'text-green-500'}`}>{signal.assertiveness}%</span>
-                 </div>
-              </div>
-              <div className="flex justify-between items-center border-b border-gray-700/50 pb-2">
-                <span className="font-medium text-gray-400">Entrada às:</span>
-                <div className="flex flex-col items-end">
-                  <span className="font-bold text-white">{signal.entryTime}</span>
-                  <span className="text-xs text-gray-400">Entrar exatamente no horário</span>
-                </div>
-              </div>
-              <SignalInfo label="Expiração:" value={signal.expiration} />
-              <SignalInfo label="Análise:" value={signal.analysis} isAnalysis={true} analysisType={signal.analysis} />
-              <SignalInfo label="Proteção 1:" value={signal.protection1} isTime={true}/>
-              <CountdownTimer entryTimestamp={signal.entryTimestamp} endTime={signal.endTime} />
-            </CardContent>
-          </Card>
         ) : (
-           <div className="flex flex-col items-center justify-center text-center w-full">
-              <Flame size={64} className="mb-4 text-primary" />
-              <h1 className="text-3xl font-bold mb-2">Gerador de Sinais</h1>
-              <p className="text-gray-400 mt-2 px-4 mb-6">Selecione o ativo e clique no botão para gerar um sinal para a corretora Avalon Broker.</p>
-               <div className="flex justify-around w-full mb-6 text-sm">
-                <div className="flex items-center gap-2">
-                    <Users size={20} className="text-primary" />
-                    <div>
-                        <p className="font-bold">{activeUsers ?? '---'}</p>
-                        <p className="text-gray-400">Usuários ativos</p>
+            <div className="flex flex-col items-center justify-center text-center w-full">
+                {/* Initial Screen Content (only shown before first signal) */}
+                {!signal && !error && (
+                    <>
+                        <Flame size={64} className="mb-4 text-primary" />
+                        <h1 className="text-3xl font-bold mb-2">Gerador de Sinais</h1>
+                        <p className="text-gray-400 mt-2 px-4 mb-6">Selecione o ativo e clique no botão para gerar um sinal para a corretora Avalon Broker.</p>
+                        <div className="flex justify-around w-full mb-6 text-sm">
+                            <div className="flex items-center gap-2">
+                                <Users size={20} className="text-primary" />
+                                <div>
+                                    <p className="font-bold">{activeUsers ?? '---'}</p>
+                                    <p className="text-gray-400">Usuários ativos</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <TrendingUp size={20} className="text-green-500" />
+                                <div>
+                                    <p className="font-bold">{winningUsers ?? '--'}%</p>
+                                    <p className="text-gray-400">Ganhando agora</p>
+                                </div>
+                            </div>
+                        </div>
+                    </>
+                )}
+                
+                {/* Asset Selector (always visible when not loading) */}
+                <Select onValueChange={(value) => { setSelectedAsset(value); setError(null); setSignal(null); }} value={selectedAsset || ''}>
+                  <SelectTrigger className="w-full mb-4">
+                    <SelectValue placeholder="Selecione um par de moedas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ASSETS.map(asset => (
+                      <SelectItem key={asset} value={asset}>{asset}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Error message display */}
+                {error && (
+                    <div className="flex flex-col items-center justify-center text-center p-4 my-4 text-red-400 animate-fade-in-down bg-red-900/20 rounded-lg">
+                        <AlertCircle size={40} className="mb-2" />
+                        <h2 className="text-lg font-bold mb-1">Falha ao Gerar Sinal</h2>
+                        <p className="text-gray-300 text-sm">{error}</p>
                     </div>
-                </div>
-                <div className="flex items-center gap-2">
-                    <TrendingUp size={20} className="text-green-500" />
-                     <div>
-                        <p className="font-bold">{winningUsers ?? '--'}%</p>
-                        <p className="text-gray-400">Ganhando agora</p>
-                    </div>
-                </div>
-              </div>
-               <Select onValueChange={setSelectedAsset} value={selectedAsset || ''}>
-                <SelectTrigger className="w-full mb-4">
-                  <SelectValue placeholder="Selecione um par de moedas" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ASSETS.map(asset => (
-                    <SelectItem key={asset} value={asset}>{asset}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-               {error && (
-                <div className="flex flex-col items-center justify-center text-center p-4 my-4 text-red-400 animate-fade-in-down bg-red-900/20 rounded-lg">
-                    <AlertCircle size={40} className="mb-2" />
-                    <h2 className="text-lg font-bold mb-1">Falha ao Gerar Sinal</h2>
-                    <p className="text-gray-300 text-sm">{error}</p>
-                </div>
-              )}
+                )}
+                
+                {/* Signal Card */}
+                {signal && (
+                    <Card className="animate-fade-in-down w-full border-2 border-primary bg-gray-900 shadow-lg shadow-primary/30 mt-4">
+                        <CardHeader className="items-center pb-4 text-center">
+                            <CardTitle className="text-2xl font-bold tracking-tight text-primary">
+                                ENTRADA CONFIRMADA
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4 text-lg">
+                            <SignalInfo label="Ativo:" value={signal.asset} />
+                            <div className="flex justify-between items-center border-b border-gray-700/50 pb-2">
+                                <span className="font-medium text-gray-400">Volatilidade:</span>
+                                <div className="flex items-center gap-2">
+                                    <BarChart2 size={20} className="text-primary"/>
+                                    <span className="font-bold text-white">{signal.volatility}</span>
+                                </div>
+                            </div>
+                            <div className="flex justify-between items-center border-b border-gray-700/50 pb-2">
+                                <span className="font-medium text-gray-400">Assertividade:</span>
+                                <div className="flex items-center gap-2">
+                                    <Target size={20} className="text-primary"/>
+                                    <span className={`font-bold ${signal.assertiveness < 75 ? 'text-red-500' : 'text-green-500'}`}>{signal.assertiveness}%</span>
+                                </div>
+                            </div>
+                            <div className="flex justify-between items-center border-b border-gray-700/50 pb-2">
+                                <span className="font-medium text-gray-400">Entrada às:</span>
+                                <div className="flex flex-col items-end">
+                                    <span className="font-bold text-white">{signal.entryTime}</span>
+                                    <span className="text-xs text-gray-400">Entrar exatamente no horário</span>
+                                </div>
+                            </div>
+                            <SignalInfo label="Expiração:" value={signal.expiration} />
+                            <SignalInfo label="Análise:" value={signal.analysis} isAnalysis={true} analysisType={signal.analysis} />
+                            <SignalInfo label="Proteção 1:" value={signal.protection1} isTime={true}/>
+                            <CountdownTimer entryTimestamp={signal.entryTimestamp} endTime={signal.endTime} />
+                        </CardContent>
+                    </Card>
+                )}
             </div>
         )}
 
         <Button
           onClick={handleGenerateSignal}
-          disabled={isLoading || isCooldown || (!signal && !error && !selectedAsset)}
+          disabled={isLoading || isCooldown || !selectedAsset}
           size="lg"
           className="mt-8 w-full rounded-full bg-primary py-8 text-xl font-bold uppercase tracking-wider text-primary-foreground shadow-lg shadow-primary/50 transition-transform duration-200 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
         >
@@ -282,7 +294,7 @@ export default function Home() {
               <Timer className="mr-2 h-6 w-6" />
               Aguarde {cooldownTime}s
             </>
-          ) : signal || (error && selectedAsset) ? 'Gerar Novo Sinal' : 'Gerar Sinal'}
+          ) : signal || error ? 'Gerar Novo Sinal' : 'Gerar Sinal'}
         </Button>
       </div>
     </div>
