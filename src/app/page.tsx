@@ -32,8 +32,6 @@ const ASSETS = {
         'GBP/JPY', 
         'AUD/CAD', 
         'USD/JPY', 
-        'EUR/GBP OTC', 
-        'AUD/USD OTC',
         'GBP/USD',
         'USD/CHF',
         'AUD/USD',
