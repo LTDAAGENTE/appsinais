@@ -27,7 +27,23 @@ interface IndicatorConfig {
 }
 
 const ASSETS = {
-    forex: ['EUR/USD', 'GBP/JPY', 'AUD/CAD', 'USD/JPY', 'EUR/GBP OTC', 'AUD/USD OTC'],
+    forex: [
+        'EUR/USD', 
+        'GBP/JPY', 
+        'AUD/CAD', 
+        'USD/JPY', 
+        'EUR/GBP OTC', 
+        'AUD/USD OTC',
+        'GBP/USD',
+        'USD/CHF',
+        'AUD/USD',
+        'USD/CAD',
+        'NZD/USD',
+        'EUR/JPY',
+        'EUR/GBP',
+        'AUD/JPY',
+        'CAD/CHF'
+    ],
     crypto: ['Arbitrum', 'Cosmos', 'Bitcoin Cash', 'Bonk', 'Bitcoin', 'Cardano', 'Dash']
 };
 const EXPIRATIONS = ['1 minuto', '5 minutos'];
