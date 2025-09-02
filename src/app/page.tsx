@@ -124,10 +124,10 @@ export default function Home() {
         setError("Por favor, selecione um par de moedas para continuar.");
         return;
     }
-    
+
     setIsLoading(true);
     setSignal(null);
-    setError(null); 
+    setError(null);
 
     setTimeout(() => {
       // Simula uma chance de falha
@@ -159,7 +159,7 @@ export default function Home() {
         }
         
         const endTime = new Date(entryTime.getTime() + expirationMinutes * 60 * 1000);
-        const protection1 = new Date(entryTime.getTime() + 1 * 60 * 1000); 
+        const protection1 = new Date(entryTime.getTime() + 1 * 60 * 1000);
 
         setSignal({
           asset: selectedAsset,
@@ -232,7 +232,7 @@ export default function Home() {
                 {error && (
                     <div className="flex flex-col items-center justify-center text-center p-4 my-4 text-red-400 animate-fade-in-down bg-red-900/20 rounded-lg">
                         <AlertCircle size={40} className="mb-2" />
-                        <h2 className="text-lg font-bold mb-1">Falha ao Gerar Sinal</h2>
+                        <h2 className="text-lg font-bold mb-1">Atenção</h2>
                         <p className="text-gray-300 text-sm">{error}</p>
                     </div>
                 )}
