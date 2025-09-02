@@ -8,6 +8,7 @@ import { Flame, Loader, Timer, AlertCircle, Clock, CheckCircle, BarChart2, Users
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 
 interface Signal {
   asset: string;
@@ -40,7 +41,9 @@ const ASSETS = {
         'EUR/JPY',
         'EUR/GBP',
         'AUD/JPY',
-        'CAD/CHF'
+        'CAD/CHF',
+        'EUR/AUD',
+        'GBP/CHF'
     ],
     crypto: ['Arbitrum', 'Cosmos', 'Bitcoin Cash', 'Bonk', 'Bitcoin', 'Cardano', 'Dash']
 };
@@ -78,6 +81,7 @@ export default function Home() {
   const [selectedAsset, setSelectedAsset] = useState<string | null>(null);
   const [activeUsers, setActiveUsers] = useState<number | null>(null);
   const [winningUsers, setWinningUsers] = useState<number | null>(null);
+  const [showAssetError, setShowAssetError] = useState(false);
   
   const availableAssets = ASSETS[config.assetType];
 
@@ -155,12 +159,14 @@ export default function Home() {
   const handleGenerateSignal = () => {
     if (!selectedAsset) {
         setError("Por favor, selecione um ativo para continuar.");
+        setShowAssetError(true);
         return;
     }
 
     setIsLoading(true);
     setSignal(null);
     setError(null);
+    setShowAssetError(false);
 
     setTimeout(() => {
       // Simula uma chance de falha
@@ -335,20 +341,25 @@ export default function Home() {
                   </>
               )}
               
-              {/* Asset Selector (always visible when not loading) */}
-              <Select onValueChange={(value) => { setSelectedAsset(value); setError(null); setSignal(null); }} value={selectedAsset || ''}>
-                <SelectTrigger className="w-full mb-4">
-                  <SelectValue placeholder="Selecione um ativo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableAssets.map(asset => (
-                    <SelectItem key={asset} value={asset}>{asset}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {/* Asset Selector */}
+              <div className="w-full mb-2">
+                <Select onValueChange={(value) => { setSelectedAsset(value); setError(null); setSignal(null); setShowAssetError(false); }} value={selectedAsset || ''}>
+                  <SelectTrigger className={cn("w-full", { "border-red-500 ring-2 ring-red-500 ring-offset-2": showAssetError })}>
+                    <SelectValue placeholder="Selecione um ativo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableAssets.map(asset => (
+                      <SelectItem key={asset} value={asset}>{asset}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                 {showAssetError && error && (
+                    <p className="text-red-500 text-sm mt-2 text-left animate-fade-in-down">{error}</p>
+                )}
+              </div>
 
-              {/* Error message display */}
-              {error && (
+              {/* General error message display (for non-asset errors) */}
+              {error && !showAssetError && (
                   <div className="flex flex-col items-center justify-center text-center p-4 my-4 text-red-400 animate-fade-in-down bg-red-900/20 rounded-lg">
                       <AlertCircle size={40} className="mb-2" />
                       <h2 className="text-lg font-bold mb-1">Atenção</h2>
@@ -399,7 +410,7 @@ export default function Home() {
 
       <Button
         onClick={handleGenerateSignal}
-        disabled={isLoading || isCooldown || !selectedAsset}
+        disabled={isLoading || isCooldown}
         size="lg"
         className="mt-8 w-full rounded-full bg-primary py-8 text-xl font-bold uppercase tracking-wider text-primary-foreground shadow-lg shadow-primary/50 transition-transform duration-200 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
       >
@@ -521,3 +532,5 @@ const CountdownTimer = ({ entryTimestamp, endTime }: { entryTimestamp: number, e
         </div>
     );
 };
+
+    
