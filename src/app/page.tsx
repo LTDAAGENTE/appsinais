@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Flame, Loader, Timer, AlertCircle, Clock, CheckCircle, BarChart2, Users, TrendingUp } from 'lucide-react';
+import { Flame, Loader, Timer, AlertCircle, Clock, CheckCircle, BarChart2, Users, TrendingUp, Target } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 
@@ -17,12 +17,14 @@ interface Signal {
   protection1: string;
   volatility: string;
   endTime: number; // End time in milliseconds
+  assertiveness: number;
 }
 
 const ASSETS = ['EUR/USD', 'GBP/JPY', 'AUD/CAD', 'USD/JPY', 'EUR/GBP OTC', 'AUD/USD OTC'];
 const EXPIRATIONS = ['1 minuto', '5 minutos'];
 const VOLATILITY = ['Baixa', 'Média', 'Alta'];
 const LOADING_MESSAGES = [
+    "Indicador está buscando entrada...",
     "Analisando o mercado...",
     "Buscando as melhores oportunidades...",
     "Verificando volatilidade...",
@@ -168,6 +170,7 @@ export default function Home() {
           protection1: formatTime(protection1),
           volatility: randomVolatility,
           endTime: endTime.getTime(),
+          assertiveness: Math.floor(Math.random() * (96 - 69 + 1)) + 69,
         });
       }
       setIsLoading(false);
@@ -200,6 +203,13 @@ export default function Home() {
                  <div className="flex items-center gap-2">
                     <BarChart2 size={20} className="text-primary"/>
                     <span className="font-bold text-white">{signal.volatility}</span>
+                 </div>
+              </div>
+               <div className="flex justify-between items-center border-b border-gray-700/50 pb-2">
+                <span className="font-medium text-gray-400">Assertividade:</span>
+                 <div className="flex items-center gap-2">
+                    <Target size={20} className="text-primary"/>
+                    <span className="font-bold text-white">{signal.assertiveness}%</span>
                  </div>
               </div>
               <div className="flex justify-between items-center border-b border-gray-700/50 pb-2">
