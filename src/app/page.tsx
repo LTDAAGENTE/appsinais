@@ -20,7 +20,7 @@ interface Signal {
   assertiveness: number;
 }
 
-const ASSETS = ['EUR/USD', 'GBP/JPY', 'AUD/CAD', 'USD/JPY', 'EUR/GBP OTC', 'AUD/USD OTC'];
+const ASSETS = ['EUR/USD', 'GBP/JPY', 'AUD/CAD', 'USD/JPY', 'EUR/GBP OTC', 'AUD/USD OTC', 'Arbitrum', 'Cosmos', 'Bitcoin Cash', 'Bonk', 'Bitcoin', 'Cardano', 'Dash'];
 const EXPIRATIONS = ['1 minuto', '5 minutos'];
 const VOLATILITY = ['Baixa', 'Média', 'Alta'];
 const LOADING_MESSAGES = [
