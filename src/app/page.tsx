@@ -296,9 +296,14 @@ export default function Home() {
              <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <Input 
               type="text" 
-              placeholder="ID da sua conta" 
+              placeholder="ID da sua conta (9 números)" 
               value={accountId}
-              onChange={(e) => setAccountId(e.target.value)}
+              onChange={(e) => {
+                const numericValue = e.target.value.replace(/[^0-9]/g, '');
+                if (numericValue.length <= 9) {
+                  setAccountId(numericValue);
+                }
+              }}
               className="pl-10"
             />
           </div>
@@ -624,5 +629,3 @@ const CountdownTimer = ({ entryTimestamp, endTime }: { entryTimestamp: number, e
         </div>
     );
 };
-
-    
