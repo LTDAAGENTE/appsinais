@@ -4,10 +4,11 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Flame, Loader, Timer, AlertCircle, Clock, CheckCircle, BarChart2, Users, TrendingUp, Target, Settings, Zap, Shield } from 'lucide-react';
+import { Flame, Loader, Timer, AlertCircle, Clock, CheckCircle, BarChart2, Users, TrendingUp, Target, Settings, Zap, Shield, Lock, User, AtSign } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 interface Signal {
@@ -68,9 +69,15 @@ const formatTime = (date: Date) => {
 };
 
 export default function Home() {
-  const [view, setView] = useState<'config' | 'generator'>('config');
+  const [view, setView] = useState<'login' | 'config' | 'generator'>('login');
   const [config, setConfig] = useState<IndicatorConfig>({ assetType: 'forex', riskLevel: 'medium' });
   
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [accountId, setAccountId] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
   const [signal, setSignal] = useState<Signal | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState(LOADING_MESSAGES[0]);
@@ -154,6 +161,21 @@ export default function Home() {
 
   const startCooldown = () => {
     setIsCooldown(true);
+  };
+
+  const handleLogin = () => {
+    setLoginError('');
+    if (!email || !password || !accountId) {
+      setLoginError('Por favor, preencha todos os campos.');
+      return;
+    }
+    setIsLoggingIn(true);
+    // Simulate API call
+    setTimeout(() => {
+      // Logic can be added here to validate credentials
+      setIsLoggingIn(false);
+      setView('config');
+    }, 1500);
   };
 
   const handleGenerateSignal = () => {
@@ -241,6 +263,59 @@ export default function Home() {
       startCooldown();
     }, LOADING_DURATION);
   };
+  
+  const renderLoginView = () => (
+    <div className="flex flex-col items-center justify-center text-center w-full animate-fade-in-down">
+      <Flame size={64} className="mb-4 text-primary" />
+      <h1 className="text-3xl font-bold mb-2">Acesso ao Indicador</h1>
+      <p className="text-gray-400 mt-2 px-4 mb-8">Faça login com seus dados da Avalon Broker.</p>
+      
+      <Card className="w-full bg-gray-900 border-gray-800 p-6">
+        <CardContent className="space-y-4">
+          <div className="relative">
+            <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Input 
+              type="email" 
+              placeholder="Seu email da Avalon" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Input 
+              type="password" 
+              placeholder="Sua senha da Avalon" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="relative">
+             <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Input 
+              type="text" 
+              placeholder="ID da sua conta" 
+              value={accountId}
+              onChange={(e) => setAccountId(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          {loginError && <p className="text-red-500 text-sm">{loginError}</p>}
+        </CardContent>
+      </Card>
+      
+      <Button
+        onClick={handleLogin}
+        disabled={isLoggingIn}
+        size="lg"
+        className="mt-8 w-full rounded-full bg-primary py-8 text-xl font-bold uppercase tracking-wider text-primary-foreground shadow-lg shadow-primary/50 transition-transform duration-200 hover:scale-105 active:scale-95"
+      >
+        {isLoggingIn ? <Loader className="animate-spin" /> : 'Entrar'}
+      </Button>
+    </div>
+  );
 
   const renderConfigView = () => (
     <div className="flex flex-col items-center justify-center text-center w-full animate-fade-in-down">
@@ -408,35 +483,52 @@ export default function Home() {
           </div>
       )}
 
-      <Button
-        onClick={handleGenerateSignal}
-        disabled={isLoading || isCooldown}
-        size="lg"
-        className="mt-8 w-full rounded-full bg-primary py-8 text-xl font-bold uppercase tracking-wider text-primary-foreground shadow-lg shadow-primary/50 transition-transform duration-200 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
-      >
-         {isLoading ? (
-          <>
-            <Loader className="mr-2 h-6 w-6 animate-spin" />
-            Buscando...
-          </>
-        ) : isCooldown ? (
-          <>
-            <Timer className="mr-2 h-6 w-6" />
-            Aguarde {cooldownTime}s
-          </>
-        ) : signal || error ? 'Gerar Novo Sinal' : 'Gerar Sinal'}
-      </Button>
+      { view === 'generator' && (
+        <>
+          <Button
+            onClick={handleGenerateSignal}
+            disabled={isLoading || isCooldown}
+            size="lg"
+            className="mt-8 w-full rounded-full bg-primary py-8 text-xl font-bold uppercase tracking-wider text-primary-foreground shadow-lg shadow-primary/50 transition-transform duration-200 hover:scale-105 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {isLoading ? (
+              <>
+                <Loader className="mr-2 h-6 w-6 animate-spin" />
+                Buscando...
+              </>
+            ) : isCooldown ? (
+              <>
+                <Timer className="mr-2 h-6 w-6" />
+                Aguarde {cooldownTime}s
+              </>
+            ) : signal || error ? 'Gerar Novo Sinal' : 'Gerar Sinal'}
+          </Button>
 
-      <Button variant="link" onClick={() => setView('config')} className="mt-4 text-gray-400">
-        Voltar para configurações
-      </Button>
+          <Button variant="link" onClick={() => setView('config')} className="mt-4 text-gray-400">
+            Voltar para configurações
+          </Button>
+        </>
+      )}
     </>
   );
+
+  const renderCurrentView = () => {
+    switch (view) {
+      case 'login':
+        return renderLoginView();
+      case 'config':
+        return renderConfigView();
+      case 'generator':
+        return renderGeneratorView();
+      default:
+        return renderLoginView();
+    }
+  };
 
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center bg-gray-900 p-4 text-white">
       <div className="w-full max-w-sm">
-        {view === 'config' ? renderConfigView() : renderGeneratorView()}
+        {renderCurrentView()}
       </div>
     </div>
   );
