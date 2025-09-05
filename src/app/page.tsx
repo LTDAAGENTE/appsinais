@@ -73,7 +73,6 @@ export default function Home() {
   const [config, setConfig] = useState<IndicatorConfig>({ assetType: 'forex', riskLevel: 'medium' });
   
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [accountId, setAccountId] = useState('');
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -165,7 +164,7 @@ export default function Home() {
 
   const handleLogin = () => {
     setLoginError('');
-    if (!email || !password || !accountId) {
+    if (!email || !accountId) {
       setLoginError('Por favor, preencha todos os campos.');
       return;
     }
@@ -279,16 +278,6 @@ export default function Home() {
               placeholder="Seu email da Avalon" 
               value={email} 
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-            <Input 
-              type="password" 
-              placeholder="Sua senha da Avalon" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               className="pl-10"
             />
           </div>
@@ -561,3 +550,5 @@ const SignalInfo = ({ label, value, isTime = false, isAnalysis = false, analysis
         </div>
     )
 }
+
+    
