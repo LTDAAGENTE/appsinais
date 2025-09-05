@@ -481,7 +481,6 @@ export default function Home() {
                           <SignalInfo label="Expiração:" value={signal.expiration} />
                           <SignalInfo label="Análise:" value={signal.analysis} isAnalysis={true} analysisType={signal.analysis} />
                           <SignalInfo label="Proteção 1:" value={signal.protection1} isTime={true}/>
-                          <CountdownTimer entryTimestamp={signal.entryTimestamp} endTime={signal.endTime} />
                       </CardContent>
                   </Card>
               )}
@@ -562,70 +561,3 @@ const SignalInfo = ({ label, value, isTime = false, isAnalysis = false, analysis
         </div>
     )
 }
-
-const CountdownTimer = ({ entryTimestamp, endTime }: { entryTimestamp: number, endTime: number }) => {
-    const [now, setNow] = useState(Date.now());
-    const intervalRef = useRef<NodeJS.Timeout>();
-
-    useEffect(() => {
-        const update = () => setNow(Date.now());
-
-        // Sincroniza com o próximo segundo
-        const firstTimeout = setTimeout(() => {
-            update();
-            intervalRef.current = setInterval(update, 1000);
-        }, 1000 - (new Date().getMilliseconds()));
-
-        return () => {
-            clearTimeout(firstTimeout);
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-            }
-        };
-    }, []);
-
-    const hasStarted = now >= entryTimestamp;
-    const hasFinished = now >= endTime;
-    const timeLeft = endTime - now;
-
-    const formatTimeLeft = (ms: number) => {
-        if (ms <= 0) return "00:00";
-        const minutes = String(Math.floor((ms / 1000) / 60)).padStart(2, '0');
-        const seconds = String(Math.floor((ms / 1000) % 60)).padStart(2, '0');
-        return `${minutes}:${seconds}`;
-    };
-
-    if (hasFinished) {
-        return (
-            <div className="mt-4 flex flex-col items-center justify-center rounded-lg bg-gray-800 p-3">
-                <span className="text-sm font-medium text-gray-400">Sinal Finalizado</span>
-                <div className="flex items-center text-2xl font-bold text-red-500">
-                    <CheckCircle className="mr-2 h-6 w-6" />
-                    <span>00:00</span>
-                </div>
-            </div>
-        );
-    }
-    
-    if (hasStarted) {
-        return (
-            <div className="mt-4 flex flex-col items-center justify-center rounded-lg bg-gray-800 p-3">
-                <span className="text-sm font-medium text-gray-400">Tempo Restante</span>
-                <div className="flex items-center text-2xl font-bold text-primary">
-                    <Clock className="mr-2 h-6 w-6" />
-                    <span>{formatTimeLeft(timeLeft)}</span>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div className="mt-4 flex flex-col items-center justify-center rounded-lg bg-gray-800 p-3">
-            <span className="text-sm font-medium text-gray-400">Aguardando horário de entrada...</span>
-             <div className="flex items-center text-2xl font-bold text-gray-500">
-                <Timer className="mr-2 h-6 w-6" />
-                <span>--:--</span>
-            </div>
-        </div>
-    );
-};
